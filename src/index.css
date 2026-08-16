@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/*
+ * ANV·BAR design tokens (Tailwind v4 CSS-first theme).
+ * Palette and typography are defined ONLY here; components must reference
+ * token utilities (bg-surface, text-brand-primary, font-display, ...),
+ * never raw hex values.
+ */
+@theme {
+  /* Brand palette */
+  --color-brand-primary: #58232c; /* bordeaux */
+  --color-brand-deep: #390f12; /* deep bordeaux */
+  --color-surface: #f3f2ef; /* ivory */
+  --color-accent: #8c6d51; /* gold */
+  --color-ink: #343434; /* gray */
+  --color-negro: #000000; /* black */
+
+  /* Typography */
+  --font-display: "Fraunces Variable", Georgia, serif;
+  --font-sans: "Manrope", "Segoe UI", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-surface font-sans text-ink antialiased;
+  }
+}
