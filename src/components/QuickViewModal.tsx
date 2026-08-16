@@ -5,6 +5,7 @@ import { ProductImage } from './ProductImage'
 type QuickViewModalProps = {
   product: Product
   onClose: () => void
+  onOpenDetail: (product: Product) => void
 }
 
 /**
@@ -12,7 +13,7 @@ type QuickViewModalProps = {
  * (hex exacto de la paleta/variante). Cierra con Escape, clic en
  * el fondo o el botón de cerrar.
  */
-export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
+export function QuickViewModal({ product, onClose, onOpenDetail }: QuickViewModalProps) {
   const [colorIndex, setColorIndex] = useState(0)
   const color = product.colors[Math.min(colorIndex, product.colors.length - 1)] ?? product.colors[0]
 
@@ -90,6 +91,14 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             </div>
             <p className="mt-2 text-sm text-ink/70">{color.name}</p>
           </fieldset>
+
+          <button
+            type="button"
+            onClick={() => onOpenDetail(product)}
+            className="mt-5 w-full rounded-full bg-brand-primary py-2.5 text-sm font-medium text-surface transition-colors hover:bg-brand-deep"
+          >
+            Ver ficha completa
+          </button>
         </div>
       </div>
     </div>

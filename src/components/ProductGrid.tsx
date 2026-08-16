@@ -4,13 +4,14 @@ import { ProductCard } from './ProductCard'
 
 type ProductGridProps = {
   onQuickView: (product: Product) => void
+  onOpenDetail: (product: Product) => void
 }
 
 /**
  * Catálogo "todo a la vista": las siete categorías como secciones
  * en una sola página continua, sin menú desplegable de categorías.
  */
-export function ProductGrid({ onQuickView }: ProductGridProps) {
+export function ProductGrid({ onQuickView, onOpenDetail }: ProductGridProps) {
   return (
     <section id="catalogo" className="scroll-mt-20">
       <Container className="py-14 sm:py-20">
@@ -40,7 +41,12 @@ export function ProductGrid({ onQuickView }: ProductGridProps) {
                 </h3>
                 <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {items.map((product) => (
-                    <ProductCard key={product.id} product={product} onQuickView={onQuickView} />
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onQuickView={onQuickView}
+                      onOpenDetail={onOpenDetail}
+                    />
                   ))}
                 </div>
               </section>

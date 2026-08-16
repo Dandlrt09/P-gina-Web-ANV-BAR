@@ -5,6 +5,7 @@ import { useLikes } from '../lib/likes'
 type ProductCardProps = {
   product: Product
   onQuickView: (product: Product) => void
+  onOpenDetail: (product: Product) => void
 }
 
 const ORDER_BADGE = 'Bajo pedido 3-5 días'
@@ -14,7 +15,7 @@ const ORDER_BADGE = 'Bajo pedido 3-5 días'
  * pedido bajo (nunca SALE), precio COP formateado, botón de "me
  * gusta" y acceso a la vista rápida.
  */
-export function ProductCard({ product, onQuickView }: ProductCardProps) {
+export function ProductCard({ product, onQuickView, onOpenDetail }: ProductCardProps) {
   const { isLiked, toggleLike } = useLikes()
   const liked = isLiked(product.id)
   const primary = product.colors[0]
@@ -63,6 +64,13 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
         <p className="mt-auto pt-1 text-base font-semibold text-brand-primary">
           {formatCOP(product.priceCOP)}
         </p>
+        <button
+          type="button"
+          onClick={() => onOpenDetail(product)}
+          className="mt-2 w-full rounded-full bg-brand-primary py-2 text-sm font-medium text-surface transition-colors hover:bg-brand-deep"
+        >
+          Ver ficha completa
+        </button>
         <button
           type="button"
           onClick={() => onQuickView(product)}
