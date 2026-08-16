@@ -7,7 +7,7 @@ function App() {
       <header className="border-b border-brand-primary/20">
         <Container className="flex items-center py-5">
           <p className="font-display text-2xl font-semibold tracking-wide text-brand-deep">
-            ANVÂ·BAR
+            ANV·BAR
           </p>
         </Container>
       </header>
@@ -18,11 +18,11 @@ function App() {
             Moda hecha a mano
           </p>
           <h1 className="mt-3 max-w-2xl font-display text-4xl font-medium leading-tight text-brand-primary sm:text-5xl">
-            La colecciÃ³n estÃ¡ en camino
+            La colección está en camino
           </h1>
           <p className="mt-4 max-w-xl text-ink/80">
-            Estamos preparando el catÃ¡logo, las fichas de producto y el pedido
-            por WhatsApp. Vuelve en unos dÃ­as.
+            Estamos preparando el catálogo, las fichas de producto y el pedido
+            por WhatsApp. Vuelve en unos días.
           </p>
         </Section>
       </main>
@@ -30,7 +30,7 @@ function App() {
       <footer className="border-t border-brand-primary/20">
         <Container className="py-4">
           <p className="text-sm text-ink/70">
-            ANVÂ·BAR â€” Donde la ligereza se convierte en elegancia
+            ANV·BAR — Donde la ligereza se convierte en elegancia
           </p>
         </Container>
       </footer>
