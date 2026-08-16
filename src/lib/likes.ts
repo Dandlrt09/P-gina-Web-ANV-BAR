@@ -4,6 +4,10 @@ export type LikesContextValue = {
   likes: ReadonlySet<string>
   isLiked: (id: string) => boolean
   toggleLike: (id: string) => void
+  /** true cuando "Tus favoritos" está activo (filtro del catálogo). */
+  favoritesOnly: boolean
+  /** Enciende o apaga el filtro "Tus favoritos". */
+  toggleFavorites: () => void
 }
 
 export const LikesContext = createContext<LikesContextValue | null>(null)
