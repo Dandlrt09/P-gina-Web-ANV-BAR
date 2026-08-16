@@ -6,6 +6,10 @@ import { TrustBar } from './components/TrustBar'
 import { ProductGrid } from './components/ProductGrid'
 import { QuickViewModal } from './components/QuickViewModal'
 import { ProductDetail } from './components/ProductDetail'
+import { Designer } from './components/Designer'
+import { Exclusivity } from './components/Exclusivity'
+import { Testimonials } from './components/Testimonials'
+import { Contact } from './components/Contact'
 import { Footer } from './components/Footer'
 import { LikesProvider } from './lib/LikesContext'
 
@@ -25,6 +29,10 @@ function Shop() {
         <Hero />
         <TrustBar />
         <ProductGrid onQuickView={setQuickView} onOpenDetail={openDetail} />
+        <Designer />
+        <Exclusivity />
+        <Testimonials />
+        <Contact />
       </main>
       <Footer />
       {quickView && (
