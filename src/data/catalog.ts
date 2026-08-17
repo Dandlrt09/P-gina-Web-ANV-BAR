@@ -23,6 +23,9 @@
 export type ProductImage = {
   /** Ruta de la foto real (carpeta /public o URL). Vacío → placeholder elegante. */
   src?: string
+  /** Foto secundaria del mismo producto: se muestra al pasar el mouse y
+   *  se vuelve a la principal al quitarlo (hover). Opcional. */
+  secondarySrc?: string
   /** Texto corto: se muestra en el placeholder tipográfico y sirve de alt. Ej: "Burdeo". */
   label: string
 }
@@ -47,14 +50,21 @@ export type Product = {
   priceCOP: number
   /** Variantes de color reales del producto. */
   colors: ProductColor[]
+  /** Imagen editorial de la "pieza estrella" (sección grande de novedades).
+   *  Si falta, esa sección usa la foto principal de la primera variante. */
+  featuredImage?: ProductImage
   /** Tallas disponibles (ej. ["XS","S","M","L","XL"] o ["Único"] para accesorios). */
   sizes: string[]
   /** Tela principal; se muestra en los datos técnicos de la ficha. */
   fabric: string
   /** Instrucciones de cuidado; se muestran en los datos técnicos de la ficha. */
   care: string
-  /** Texto editorial de la ficha: voz de marca, 2-4 frases. */
+  /** Texto editorial de la ficha: voz de marca, 1-2 frases. */
   editorial: string
+  /** Flag de novedad (lo marca Anays): la pieza aparece en la cinta de novedades. */
+  isNew?: boolean
+  /** Fecha ISO YYYY-MM-DD para ordenar la cinta de novedades (más reciente primero). */
+  addedAt?: string
   /** Badge opcional. Si falta, la interfaz muestra el badge estándar de la marca:
    *  "Bajo pedido 3-5 días". No usar badges de oferta. */
   badge?: string
@@ -114,14 +124,29 @@ export const PRODUCTS: Product[] = [
     category: 'Vestidos',
     priceCOP: 320000,
     colors: [
-      { name: 'Burdeo', hex: '#58232c', image: { label: 'Vestido RUBRA Nocturno — Burdeo' } },
+      {
+        name: 'Burdeo',
+        hex: '#58232c',
+        image: {
+          src: '/imagenes/vestido-rubra-nocturno.jpg',
+          secondarySrc: '/imagenes/vestido-rubra-nocturno-v2.jpg',
+          label: 'Vestido RUBRA Nocturno — Burdeo',
+        },
+      },
       { name: 'Negro', hex: '#000000', image: { label: 'Vestido RUBRA Nocturno — Negro' } },
     ],
+    featuredImage: {
+      src: '/imagenes/featured-rubra-nocturno.jpg',
+      secondarySrc: '/imagenes/featured-rubra-nocturno-v2.jpg',
+      label: 'Vestido RUBRA Nocturno — Pieza estrella',
+    },
     sizes: ['S', 'M', 'L'],
     fabric: 'Gasa de seda',
     care: 'Lavar a mano con agua fría. Secar a la sombra. No usar blanqueador.',
     editorial:
-      'El vestido que abre la colección RUBRA: una silueta fluida que cae con el peso justo, pensada para las noches caribeñas en las que la brisa es parte del vestuario.',
+      'El vestido que abre la colección RUBRA, hecho para las noches en las que la brisa también se viste. Cae con el peso justo: ligera, roja, inolvidable.',
+    isNew: true,
+    addedAt: '2026-08-15',
   },
   {
     id: 'vestido-trinitaria',
@@ -129,14 +154,24 @@ export const PRODUCTS: Product[] = [
     category: 'Vestidos',
     priceCOP: 280000,
     colors: [
-      { name: 'Marfil', hex: '#f3f2ef', image: { label: 'Vestido Trinitaria — Marfil' } },
+      {
+        name: 'Marfil',
+        hex: '#f3f2ef',
+        image: {
+          src: '/imagenes/vestido-trinitaria.jpg',
+          secondarySrc: '/imagenes/vestido-trinitaria-v2.jpg',
+          label: 'Vestido Trinitaria — Marfil',
+        },
+      },
       { name: 'Rosa empolvado', hex: '#d9b8ac', image: { label: 'Vestido Trinitaria — Rosa empolvado' } },
     ],
     sizes: ['XS', 'S', 'M', 'L'],
     fabric: 'Viscosa lavable',
     care: 'Lavar a mano con agua fría. Secar a la sombra. No usar secadora.',
     editorial:
-      'Tres pétalos, tres intensidades: la trinitaria inspira un vestido ligero que se mueve contigo de la mañana al atardecer, sin perder el aire elegante de la colección.',
+      'La trinitaria se hizo vestido: tres pétalos y una silueta que se mueve contigo desde el café de la mañana hasta el primer destello del atardecer.',
+    isNew: true,
+    addedAt: '2026-08-14',
   },
   {
     id: 'vestido-ceremonia-marfil',
@@ -144,14 +179,24 @@ export const PRODUCTS: Product[] = [
     category: 'Vestidos',
     priceCOP: 380000,
     colors: [
-      { name: 'Marfil', hex: '#f3f2ef', image: { label: 'Vestido Ceremonia Marfil' } },
+      {
+        name: 'Marfil',
+        hex: '#f3f2ef',
+        image: {
+          src: '/imagenes/vestido-ceremonia-marfil.jpg',
+          secondarySrc: '/imagenes/vestido-ceremonia-marfil-v2.jpg',
+          label: 'Vestido Ceremonia Marfil — Marfil',
+        },
+      },
       { name: 'Dorado', hex: '#8c6d51', image: { label: 'Vestido Ceremonia — Dorado' } },
     ],
     sizes: ['S', 'M', 'L'],
     fabric: 'Crepé de poliéster',
     care: 'Lavar en seco o a mano con agua fría. Planchar a baja temperatura por el revés.',
     editorial:
-      'Una pieza para ceremonias al atardecer: corte depurado, caída serena y un brillo sutil que acompaña sin competir con quien la lleva.',
+      'Para el instante en que entras por la puerta: marfil y un brillo contenido que acompaña sin pedir permiso. Tú guardas la fecha; él guarda tu silueta.',
+    isNew: true,
+    addedAt: '2026-08-13',
   },
   {
     id: 'conjunto-trinitaria',
@@ -166,22 +211,24 @@ export const PRODUCTS: Product[] = [
     fabric: 'Popelina de algodón',
     care: 'Lavar a máquina en ciclo suave con agua fría. Secar a la sombra.',
     editorial:
-      'El conjunto que da nombre a la colección: superior y falda que conversan en color y caída, para vestir el caribe con comodidad y elegancia de una sola pieza.',
+      'El conjunto que le dio nombre a RUBRA: superior y falda en el mismo color de piel de la flor. Vístete del Caribe sin esforzarte.',
+    isNew: true,
+    addedAt: '2026-08-12',
   },
   {
-    id: 'conjunto-lino-caribe',
-    name: 'Conjunto Lino Caribe',
+    id: 'conjunto-brisa-caribe',
+    name: 'Conjunto Brisa Caribe',
     category: 'Conjuntos',
     priceCOP: 240000,
     colors: [
-      { name: 'Marfil', hex: '#f3f2ef', image: { label: 'Conjunto Lino Caribe — Marfil' } },
-      { name: 'Azul noche', hex: '#1e2a3a', image: { label: 'Conjunto Lino Caribe — Azul noche' } },
+      { name: 'Marfil', hex: '#f3f2ef', image: { label: 'Conjunto Brisa Caribe — Marfil' } },
+      { name: 'Azul noche', hex: '#1e2a3a', image: { label: 'Conjunto Brisa Caribe — Azul noche' } },
     ],
     sizes: ['S', 'M', 'L', 'XL'],
     fabric: 'Lino bien vestido',
     care: 'Lavar a mano con agua fría. No retorcer. Planchar ligeramente húmedo.',
     editorial:
-      'El lino que respira contigo: un conjunto fresco y estructurado para los días de calor, con la ligereza que define a la casa.',
+      'El lino que respira contigo, liviano como la brisa de la tarde en la playa. Un conjunto fresco que llega vestido donde la arena empieza.',
   },
   {
     id: 'camisa-riviera',
@@ -196,7 +243,7 @@ export const PRODUCTS: Product[] = [
     fabric: 'Popelina de algodón',
     care: 'Lavar a máquina en ciclo suave con agua fría. Secar a la sombra.',
     editorial:
-      'Una camisa fluida que se viste de fiesta o de oficina con el mismo aplomo: cuello delicado, caída liviana y un tono que recuerda la tierra caribeña.',
+      'Del escritorio a la orilla del mar sin cambiar de camisa: cortes limpios y un tono de tierra que el Caribe reconoce al instante.',
   },
   {
     id: 'camisa-onix',
@@ -211,7 +258,7 @@ export const PRODUCTS: Product[] = [
     fabric: 'Seda satinada',
     care: 'Lavar a mano con agua fría. Secar a la sombra. No usar secadora.',
     editorial:
-      'El negro de noche, el dorado de los detalles: una camisa de seda que transforma cualquier plan en ocasión.',
+      'Negro para la noche, dorado para el detalle: la seda convierte cualquier plan en ocasión.',
   },
   {
     id: 'falda-plisada-contraluz',
@@ -219,14 +266,22 @@ export const PRODUCTS: Product[] = [
     category: 'Faldas',
     priceCOP: 220000,
     colors: [
-      { name: 'Dorado', hex: '#8c6d51', image: { label: 'Falda Plisada — Dorado' } },
+      {
+        name: 'Dorado',
+        hex: '#8c6d51',
+        image: {
+          src: '/imagenes/falda-plisada-contraluz.jpg',
+          secondarySrc: '/imagenes/falda-plisada-contraluz-v2.jpg',
+          label: 'Falda Plisada — Dorado',
+        },
+      },
       { name: 'Burdeo', hex: '#58232c', image: { label: 'Falda Plisada — Burdeo' } },
     ],
     sizes: ['XS', 'S', 'M', 'L'],
     fabric: 'Gasa de seda',
     care: 'Lavar a mano con agua fría. Secar a la sombra. No usar blanqueador.',
     editorial:
-      'Pliegues que atrapan la luz al caminar: una falda que hace del movimiento su mejor detalle, ideal para cerrar la noche con aire de fiesta.',
+      'Pliegues que atrapan el contraluz y lo sueltan al caminar. Se mueve primero; tú solo entra haciendo favor.',
   },
   {
     id: 'pantalon-linea-delta',
@@ -241,7 +296,7 @@ export const PRODUCTS: Product[] = [
     fabric: 'Crepé de poliéster',
     care: 'Lavar a mano con agua fría. Secar a la sombra. Planchar a baja temperatura.',
     editorial:
-      'La pierna recta que alarga la silueta: un pantalón de crepé con caída impecable, del caribe al centro de la ciudad.',
+      'La pierna recta que estira la silueta y no olvida el puerto. Del centro de la ciudad a la Santa Marta de siempre, con caída impecable.',
   },
   {
     id: 'set-resort-cayena',
@@ -249,14 +304,24 @@ export const PRODUCTS: Product[] = [
     category: 'Sets',
     priceCOP: 300000,
     colors: [
-      { name: 'Coral', hex: '#d97a63', image: { label: 'Set Resort Cayena — Coral' } },
+      {
+        name: 'Coral',
+        hex: '#d97a63',
+        image: {
+          src: '/imagenes/set-resort-cayena.jpg',
+          secondarySrc: '/imagenes/set-resort-cayena-v2.jpg',
+          label: 'Set Resort Cayena — Coral',
+        },
+      },
       { name: 'Marfil', hex: '#f3f2ef', image: { label: 'Set Resort Cayena — Marfil' } },
     ],
     sizes: ['S', 'M', 'L'],
     fabric: 'Viscosa lavable',
     care: 'Lavar a mano con agua fría. Secar a la sombra. No usar secadora.',
     editorial:
-      'Tres piezas para un mismo destino: la cayena florece en un set que se combina entre sí, pensado para los días de resort y las cenas junto al mar.',
+      'La cayena florece en un tres piezas que se combina solo: resort de día, cena junto al mar cuando cae la noche.',
+    isNew: true,
+    addedAt: '2026-08-11',
   },
   {
     id: 'set-bahia',
@@ -271,7 +336,7 @@ export const PRODUCTS: Product[] = [
     fabric: 'Popelina de algodón',
     care: 'Lavar a máquina en ciclo suave con agua fría. Secar a la sombra.',
     editorial:
-      'Un set que abraza el descanso: tonos suaves, cortes amplios y la calma de la bahía puesta en dos piezas.',
+      'Tonos de salvia y la calma de una bahía a media tarde, en dos piezas que abrazan el descanso.',
   },
   {
     id: 'turbante-seda-rubra',
@@ -287,7 +352,9 @@ export const PRODUCTS: Product[] = [
     fabric: 'Seda satinada',
     care: 'Lavar a mano con agua fría. Secar a la sombra. No planchar directamente.',
     editorial:
-      'El toque final de la colección: un turbante de seda que corona cualquier look con la firma silenciosa de RUBRA.',
+      'El cierre perfecto de RUBRA: seda que corona cualquier look con la firma silenciosa de la colección.',
+    isNew: true,
+    addedAt: '2026-08-10',
   },
 ]
 
@@ -320,11 +387,11 @@ export const TESTIMONIALS: Testimonial[] = [
 export const DESIGNER: DesignerProfile = {
   name: 'Anays Vargas',
   role: 'Diseñadora y fundadora de ANV·BAR',
-  bio: 'Creadora caribeña que diseña piezas femeninas, ligeras y elegantes, hechas a mano bajo pedido.',
+  bio: 'Diseñadora caribeña de oficio y de nacimiento: crea piezas femeninas, ligeras y elegantes, cosidas a mano bajo pedido.',
   collection: {
     name: 'RUBRA',
     story:
-      'RUBRA nace de la trinitaria, la flor que tiñe los jardines del Caribe: tres pétalos, tres intensidades, una misma ligereza. Cada pieza recoge ese juego de color y aire para vestir el día y la noche de quien la lleva.',
+      'RUBRA nace del rojo de la trinitaria, la flor de tres pétalos que enciende los jardines del Caribe. Tres pétalos, tres intensidades y una misma ligereza: cada pieza atrapa ese juego de color y aire para vestir el día y la noche de quien la lleva.',
   },
   claim: 'Donde la ligereza se convierte en elegancia',
 }
