@@ -21,7 +21,7 @@ export function ProductCard({ product, onQuickView, onOpenDetail }: ProductCardP
   const primary = product.colors[0]
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl border border-brand-primary/15 bg-white/60 transition-shadow hover:shadow-md">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-brand-primary/15 bg-white/60 transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-primary/10 motion-reduce:transform-none motion-reduce:transition-none">
       <div
         role="button"
         tabIndex={0}

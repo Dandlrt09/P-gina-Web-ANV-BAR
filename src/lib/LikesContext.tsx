@@ -5,13 +5,12 @@ import { loadLikes, saveLikes } from './likes-storage'
 /**
  * Provee el estado de "me gusta" (favoritos) a toda la tienda.
  *
- * Fase 5: los favoritos persisten en localStorage (se restauran al cargar
- * y se guardan en cada cambio) y el conmutador "Tus favoritos" enciende el
- * filtro del catálogo para mostrar solo las piezas guardadas (spec likes).
+ * Los favoritos persisten en localStorage (se restauran al cargar y se
+ * guardan en cada cambio) y se muestran en su pantalla dedicada
+ * (FavoritesPage), sin filtrar el catálogo principal.
  */
 export function LikesProvider({ children }: { children: ReactNode }) {
   const [likes, setLikes] = useState<Set<string>>(() => loadLikes())
-  const [favoritesOnly, setFavoritesOnly] = useState(false)
 
   useEffect(() => {
     saveLikes(likes)
@@ -31,12 +30,7 @@ export function LikesProvider({ children }: { children: ReactNode }) {
 
   const isLiked = useCallback((id: string) => likes.has(id), [likes])
 
-  const toggleFavorites = useCallback(() => setFavoritesOnly((prev) => !prev), [])
-
-  const value = useMemo(
-    () => ({ likes, isLiked, toggleLike, favoritesOnly, toggleFavorites }),
-    [likes, isLiked, toggleLike, favoritesOnly, toggleFavorites],
-  )
+  const value = useMemo(() => ({ likes, isLiked, toggleLike }), [likes, isLiked, toggleLike])
 
   return <LikesContext.Provider value={value}>{children}</LikesContext.Provider>
 }

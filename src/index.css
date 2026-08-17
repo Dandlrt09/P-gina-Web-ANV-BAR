@@ -18,10 +18,75 @@
   /* Typography */
   --font-display: "Fraunces Variable", Georgia, serif;
   --font-sans: "Manrope", "Segoe UI", sans-serif;
+
+  /* Motion: trinitaria meciéndose con la brisa */
+  --animate-flor-breeze: flor-breeze 9s ease-in-out infinite;
+
+  @keyframes flor-breeze {
+    0%,
+    100% {
+      transform: rotate(-2.5deg) scale(1);
+    }
+    50% {
+      transform: rotate(2.5deg) scale(1.04);
+    }
+  }
+
+  /* Motion: aparición suave del hero al cargar */
+  --animate-rise: rise 0.7s ease-out both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 @layer base {
   body {
     @apply bg-surface font-sans text-ink antialiased;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /*
+   * Editorial watermark: a giant decorative word behind the section content.
+   * Transparent fill + a subtle brand-colored stroke, so it reads as texture
+   * instead of competing with the copy. Position/size live in the component.
+   */
+  .editorial-watermark {
+    pointer-events: none;
+    user-select: none;
+    color: transparent;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--color-brand-deep) 16%, transparent);
+  }
+
+  /* Watermark variant for dark backgrounds: light stroke, still no fill. */
+  .editorial-watermark--light {
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--color-surface) 28%, transparent);
   }
 }
