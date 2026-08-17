@@ -25,6 +25,29 @@ export function ProductGrid({ onQuickView, onOpenDetail }: ProductGridProps) {
 
   const visibleCategories = activeCategory ? [activeCategory] : CATEGORIES
 
+  // Emptiness is a pure derivation from the data, recomputed on every render —
+  // no state flag, so the catalog recovers automatically once any category has
+  // a product (REQ-2). Evaluated against every category, never against
+  // `visibleCategories`, so an active filter on an empty category cannot
+  // trigger the global branch.
+  const hasAnyProducts = CATEGORIES.some((category) =>
+    PRODUCTS.some((product) => product.category === category),
+  )
+
+  // Global empty state. Intentional asymmetry: this branch hides the
+  // "El catálogo" header too, while the per-section branch keeps its <h3>.
+  if (!hasAnyProducts) {
+    return (
+      <section id="catalogo" className="scroll-mt-20">
+        <Container className="py-14 sm:py-20">
+          <p role="status" className="text-ink/80">
+            El catálogo está vacío por ahora. Vuelve pronto.
+          </p>
+        </Container>
+      </section>
+    )
+  }
+
   return (
     <section id="catalogo" className="scroll-mt-20">
       <Container className="py-14 sm:py-20">
@@ -74,17 +97,23 @@ export function ProductGrid({ onQuickView, onOpenDetail }: ProductGridProps) {
                 >
                   {category}
                 </h3>
-                <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {items.map((product, index) => (
-                    <Reveal key={product.id} delay={(index % 4) * 75} className="h-full">
-                      <ProductCard
-                        product={product}
-                        onQuickView={onQuickView}
-                        onOpenDetail={onOpenDetail}
-                      />
-                    </Reveal>
-                  ))}
-                </div>
+                {items.length === 0 ? (
+                  <p className="mt-5 text-ink/80">
+                    Todavía no hay piezas disponibles en esta categoría.
+                  </p>
+                ) : (
+                  <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {items.map((product, index) => (
+                      <Reveal key={product.id} delay={(index % 4) * 75} className="h-full">
+                        <ProductCard
+                          product={product}
+                          onQuickView={onQuickView}
+                          onOpenDetail={onOpenDetail}
+                        />
+                      </Reveal>
+                    ))}
+                  </div>
+                )}
               </section>
             )
           })}
