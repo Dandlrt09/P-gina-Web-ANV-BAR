@@ -39,10 +39,22 @@ export function ProductGrid({ onQuickView, onOpenDetail }: ProductGridProps) {
   if (!hasAnyProducts) {
     return (
       <section id="catalogo" className="scroll-mt-20">
-        <Container className="py-14 sm:py-20">
-          <p role="status" className="text-ink/80">
-            El catálogo está vacío por ahora. Vuelve pronto.
-          </p>
+        <Container className="py-8 sm:py-10">
+          <div role="status" className="flex min-h-[38dvh] flex-col items-center justify-center text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent">ANV·BAR</p>
+            <h2 className="mt-4 font-display text-3xl font-medium text-brand-deep sm:text-4xl">
+              El catálogo se está vistiendo
+            </h2>
+            <p className="mt-4 max-w-md text-ink/80">
+              Cada pieza se cose a mano después de tu pedido. Estamos preparando la nueva
+              colección: vuelve en unos días para verla llegar.
+            </p>
+            <div aria-hidden="true" className="mt-10 flex items-center gap-3">
+              <span className="h-px w-16 bg-brand-primary/15" />
+              <span className="h-1.5 w-1.5 rotate-45 bg-brand-primary/40" />
+              <span className="h-px w-16 bg-brand-primary/15" />
+            </div>
+          </div>
         </Container>
       </section>
     )
@@ -98,9 +110,20 @@ export function ProductGrid({ onQuickView, onOpenDetail }: ProductGridProps) {
                   {category}
                 </h3>
                 {items.length === 0 ? (
-                  <p className="mt-5 text-ink/80">
-                    Todavía no hay piezas disponibles en esta categoría.
-                  </p>
+                  <div className="mt-5 max-w-md">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent">
+                      Próximamente
+                    </p>
+                    <p className="mt-2 text-ink/80">
+                      Esta categoría se está vistiendo. Vuelve pronto para ver las piezas que
+                      están por llegar.
+                    </p>
+                    <div aria-hidden="true" className="mt-6 flex items-center gap-3">
+                      <span className="h-px w-16 bg-brand-primary/15" />
+                      <span className="h-1.5 w-1.5 rotate-45 bg-brand-primary/40" />
+                      <span className="h-px w-16 bg-brand-primary/15" />
+                    </div>
+                  </div>
                 ) : (
                   <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {items.map((product, index) => (
