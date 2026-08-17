@@ -18,63 +18,86 @@ import { LikesProvider } from './lib/LikesContext'
 import { useLikes } from './lib/likes'
 import { Reveal } from './lib/Reveal'
 
-type View = 'home' | 'favorites'
+type View = 'home' | 'favorites' | 'product'
+
+type Route = {
+  view: View
+  /** ID del producto cuando view === 'product'. */
+  productId: string | null
+}
 
 /** La vista vive en el hash de la URL para que back/forward y recarga
- *  funcionen como en una navegación real, sin agregar un router. */
-function viewFromHash(): View {
-  return window.location.hash.startsWith('#/favoritos') ? 'favorites' : 'home'
+ *  funcionen como en una navegación real, sin agregar un router.
+ *  #/producto/<id> → ficha de producto; #/favoritos → favoritos;
+ *  el resto (incluido #catalogo) → home. */
+function routeFromHash(): Route {
+  const hash = window.location.hash
+  const match = hash.match(/^#\/producto\/([^/]+)$/)
+  if (match) {
+    try {
+      return { view: 'product', productId: decodeURIComponent(match[1]) }
+    } catch {
+      return { view: 'product', productId: match[1] }
+    }
+  }
+  if (hash.startsWith('#/favoritos')) return { view: 'favorites', productId: null }
+  return { view: 'home', productId: null }
 }
 
 function Shop() {
-  const [view, setView] = useState<View>(viewFromHash)
+  const [route, setRoute] = useState<Route>(routeFromHash)
   const [quickView, setQuickView] = useState<Product | null>(null)
-  const [detail, setDetail] = useState<Product | null>(null)
   const { likes } = useLikes()
 
   // Back/forward del navegador: el hash cambia → sincronizamos la vista.
   useEffect(() => {
     const onHashChange = () => {
+      const next = routeFromHash()
+      setRoute(next)
       const hash = window.location.hash
-      if (hash.startsWith('#/favoritos')) {
-        setView('favorites')
+      if (next.view === 'favorites' || next.view === 'product') {
         window.scrollTo({ top: 0 })
-      } else {
-        setView('home')
+      } else if (hash === '' || hash === '#/') {
         // Rutas sin ancla ('' o '#/'): arriba de la home.
-        if (hash === '' || hash === '#/') window.scrollTo({ top: 0 })
+        window.scrollTo({ top: 0 })
       }
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
+  // Abre la ficha completa: navegación real por hash (#/producto/<id>).
   const openDetail = (product: Product) => {
     setQuickView(null)
-    setDetail(product)
+    setRoute({ view: 'product', productId: product.id })
+    window.location.hash = '/producto/' + product.id
   }
 
   const goToFavorites = () => {
-    setDetail(null)
     setQuickView(null)
-    setView('favorites')
+    setRoute({ view: 'favorites', productId: null })
     window.location.hash = '/favoritos'
     window.scrollTo({ top: 0 })
   }
 
   const goHome = () => {
-    setDetail(null)
     setQuickView(null)
-    setView('home')
+    setRoute({ view: 'home', productId: null })
     window.location.hash = '/'
     window.scrollTo({ top: 0 })
   }
 
+  // Vuelve al catálogo (home) con scroll a la sección #catalogo.
   const goBackToCatalog = () => {
-    setView('home')
+    setRoute({ view: 'home', productId: null })
     window.location.hash = 'catalogo'
     setTimeout(() => document.getElementById('catalogo')?.scrollIntoView({ behavior: 'smooth' }), 60)
   }
+
+  const product =
+    route.view === 'product' && route.productId
+      ? (PRODUCTS.find((item) => item.id === route.productId) ?? null)
+      : null
 
   const featured = PRODUCTS.filter((p) => p.isNew).sort((a, b) =>
     (b.addedAt ?? '').localeCompare(a.addedAt ?? ''),
@@ -84,12 +107,14 @@ function Shop() {
     <div className="flex min-h-screen flex-col bg-surface font-sans text-ink">
       <Nav favoritesCount={likes.size} onGoToFavorites={goToFavorites} onGoHome={goHome} />
       <main className="flex-1">
-        {view === 'favorites' ? (
+        {route.view === 'favorites' ? (
           <FavoritesPage
             onQuickView={setQuickView}
             onOpenDetail={openDetail}
             onBackToCatalog={goBackToCatalog}
           />
+        ) : route.view === 'product' && product ? (
+          <ProductDetail key={product.id} product={product} onBackToCatalog={goBackToCatalog} />
         ) : (
           <>
             <Hero />
@@ -126,7 +151,6 @@ function Shop() {
           onOpenDetail={openDetail}
         />
       )}
-      {detail && <ProductDetail product={detail} onClose={() => setDetail(null)} />}
     </div>
   )
 }
