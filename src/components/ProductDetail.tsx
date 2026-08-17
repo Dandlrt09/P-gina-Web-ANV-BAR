@@ -68,7 +68,7 @@ export function ProductDetail({ product, onClose }: ProductDetailProps) {
           <ProductImage
             image={color.image}
             alt={color.image?.label ?? product.name}
-            className="aspect-[4/3] w-full sm:aspect-[16/9]"
+            className="aspect-[4/5] w-full"
           />
           <button
             type="button"

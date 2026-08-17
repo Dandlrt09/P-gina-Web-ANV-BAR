@@ -11,7 +11,7 @@ export function Contact() {
     <section id="contacto" className="scroll-mt-20 border-t border-brand-primary/10 bg-white/40">
       <Container className="py-14 sm:py-20">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent">Contacto</p>
-        <h2 className="mt-3 font-display text-3xl font-medium text-brand-deep sm:text-4xl">
+        <h2 className="mt-3 font-display text-4xl font-medium text-brand-deep sm:text-5xl lg:text-6xl">
           Hablemos
         </h2>
         <p className="mt-3 max-w-xl text-ink/80">Escríbenos por el canal que prefieras. Todos los pedidos se tramitan por WhatsApp en texto, sin llamadas.</p>

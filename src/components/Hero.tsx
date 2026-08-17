@@ -1,57 +1,70 @@
 import { Container } from './Container'
 
+const HERO_IMAGE = '/imagenes/hero-rubra.jpg'
+
 /**
- * Hero editorial full-bleed: manifiesto de una línea en serif,
- * colección RUBRA y el motivo de la trinitaria (tres pétalos).
- * El claim mantiene su idioma original (decisión de marca).
+ * Hero editorial full-bleed: foto IA del vestido burdeo suspendido entre
+ * trinitarias como protagonista, con overlay suave para legibilidad y un
+ * degradado inferior que funde la sección con la superficie del sitio.
+ * El claim mantiene su idioma y su texto original (decisión de marca).
  */
 export function Hero() {
   return (
-    <section id="inicio" className="scroll-mt-20 overflow-hidden border-b border-brand-primary/10">
-      <Container className="relative py-16 sm:py-24 lg:py-28">
-        <div className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent">
-            Colección RUBRA
+    <section
+      id="inicio"
+      className="relative flex min-h-[90vh] scroll-mt-20 items-center overflow-hidden"
+    >
+      {/* Foto protagonista (placeholder IA hasta las fotos reales de Anays) */}
+      <img
+        src={HERO_IMAGE}
+        alt="Vestido burdeo suspendido entre trinitarias de la colección RUBRA"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+
+      {/* Overlay suave para legibilidad del texto */}
+      <div aria-hidden="true" className="absolute inset-0 bg-surface/30 mix-blend-multiply" />
+
+      {/* Scrim lateral: oscurece la zona del texto para que se lea sobre la foto */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-r from-negro/55 via-negro/25 to-transparent"
+      />
+
+      {/* Degradado inferior que funde la foto con la superficie del sitio */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-surface to-transparent" />
+
+      <Container className="relative py-20 sm:py-28 lg:py-32">
+        <div className="relative max-w-2xl">
+          <p className="animate-rise motion-reduce:animate-none text-xs font-semibold uppercase tracking-[0.3em] text-surface [text-shadow:0_1px_8px_rgba(0,0,0,0.55)]">
+            ✦ Colección RUBRA
           </p>
-          <h1 className="mt-4 font-display text-4xl font-medium leading-tight text-brand-primary sm:text-5xl lg:text-6xl">
-            Donde la ligereza se convierte en elegancia
+          <h1 className="animate-rise motion-reduce:animate-none mt-5 font-display text-5xl font-medium leading-[1.05] text-surface [text-shadow:0_1px_12px_rgba(0,0,0,0.25)] sm:text-6xl lg:text-7xl">
+            Donde la ligereza
+            <br />
+            se convierte en{' '}
+            <em className="bg-gradient-to-r from-[#e3b37e] via-[#f2d9a8] to-[#c9904f] bg-clip-text font-semibold italic text-transparent [filter:drop-shadow(0_2px_8px_rgba(0,0,0,0.45))]">
+              elegancia
+            </em>
           </h1>
-          <p className="mt-5 max-w-xl text-ink/80">
+          <p className="animate-rise motion-reduce:animate-none mt-6 max-w-xl text-surface [animation-delay:120ms] [text-shadow:0_2px_12px_rgba(0,0,0,0.6)]">
             Prendas femeninas hechas a mano bajo pedido, inspiradas en la
             trinitaria que florece en los jardines del Caribe.
           </p>
-          <a
-            href="#catalogo"
-            className="mt-8 inline-flex rounded-full bg-brand-primary px-7 py-3 text-sm font-semibold text-surface transition-colors hover:bg-brand-deep"
-          >
-            Ver la colección
-          </a>
+          <div className="animate-rise motion-reduce:animate-none mt-8 flex flex-wrap items-center gap-3 [animation-delay:240ms]">
+            <a
+              href="#catalogo"
+              className="inline-flex rounded-full bg-brand-primary px-7 py-3 text-sm font-semibold text-surface transition-colors hover:bg-brand-deep"
+            >
+              Ver la colección
+            </a>
+            <a
+              href="#disenadora"
+              className="inline-flex rounded-full border border-surface/90 bg-negro/30 px-7 py-3 text-sm font-semibold text-surface shadow-sm backdrop-blur-sm transition-colors hover:bg-surface hover:text-brand-deep"
+            >
+              Conoce a la diseñadora
+            </a>
+          </div>
         </div>
-
-        {/* Motivo decorativo: tres pétalos de la trinitaria */}
-        <svg
-          viewBox="0 0 200 200"
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-16 top-1/2 hidden w-72 -translate-y-1/2 lg:block"
-        >
-          <ellipse
-            cx="100"
-            cy="62"
-            rx="48"
-            ry="38"
-            fill="var(--color-brand-primary)"
-            transform="rotate(45 100 62)"
-          />
-          <ellipse
-            cx="100"
-            cy="138"
-            rx="48"
-            ry="38"
-            fill="var(--color-accent)"
-            transform="rotate(-45 100 138)"
-          />
-          <circle cx="100" cy="100" r="20" fill="var(--color-surface)" stroke="var(--color-brand-deep)" strokeWidth="2" />
-        </svg>
       </Container>
     </section>
   )

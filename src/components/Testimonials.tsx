@@ -10,7 +10,7 @@ export function Testimonials() {
     <section id="testimonios" className="scroll-mt-20 border-t border-brand-primary/10">
       <Container className="py-14 sm:py-20">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent">Clientas</p>
-        <h2 className="mt-3 font-display text-3xl font-medium text-brand-deep sm:text-4xl">
+        <h2 className="mt-3 font-display text-4xl font-medium text-brand-deep sm:text-5xl lg:text-6xl">
           Lo que dicen
         </h2>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
