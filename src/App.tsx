@@ -14,6 +14,7 @@ import { Exclusivity } from './components/Exclusivity'
 import { Testimonials } from './components/Testimonials'
 import { Contact } from './components/Contact'
 import { Footer } from './components/Footer'
+import { ChatWidget } from './components/ChatWidget'
 import { LikesProvider } from './lib/LikesContext'
 import { useLikes } from './lib/likes'
 import { Reveal } from './lib/Reveal'
@@ -151,6 +152,7 @@ function Shop() {
           onOpenDetail={openDetail}
         />
       )}
+      <ChatWidget />
     </div>
   )
 }
