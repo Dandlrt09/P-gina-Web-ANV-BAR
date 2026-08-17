@@ -2,17 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { addReview, type ProductReview } from '../lib/reviews-storage'
 
 /**
- * Texto de Términos y Condiciones de las reviews. Texto corto en español
- * neutro, honesto con la realidad de la web (100% estática): las reviews
- * se guardan solo en el dispositivo de la persona que las escribe.
- * Constante exportada para que el cliente la revise fácilmente.
+ * Links de Términos y Condiciones y Política de Privacidad de las reviews.
+ * Apuntan a las páginas públicas de Judge.me (decisión del cliente: reutiliza
+ * esas páginas en vez de redactar páginas propias por ahora).
  */
-export const REVIEW_TERMS =
-  'Al publicar tu review confirmas que la reseña se muestra públicamente en la ficha de este ' +
-  'producto y que refleja tu experiencia personal con la pieza. En esta versión del sitio, las ' +
-  'reviews se guardan solo en tu dispositivo (navegador) y no se envían a ANV·BAR: volverán a ' +
-  'aparecer cuando vuelvas a visitar esta página. ANV·BAR se reserva el derecho de moderar o ' +
-  'retirar contenidos ofensivos o ajenos a la experiencia de compra.'
+export const REVIEW_TERMS_URL = 'https://judge.me/terms'
+export const REVIEW_PRIVACY_URL = 'https://judge.me/privacy'
 
 const MIN_COMMENT_LENGTH = 10
 
@@ -206,11 +201,29 @@ export function ReviewWizard({ productId, onPublished }: ReviewWizardProps) {
                 onChange={(event) => setAccepted(event.target.checked)}
                 className="mt-1 size-4 shrink-0 accent-brand-primary"
               />
-              <span>Acepto los términos de la review.</span>
+              <span>
+                Solo te contactaremos sobre tu review si es necesario. Al enviar tu review, aceptas
+                nuestros{' '}
+                <a
+                  href={REVIEW_TERMS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-brand-primary/40 underline-offset-2 transition-colors hover:text-brand-primary"
+                >
+                  términos y condiciones
+                </a>{' '}
+                y la{' '}
+                <a
+                  href={REVIEW_PRIVACY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-brand-primary/40 underline-offset-2 transition-colors hover:text-brand-primary"
+                >
+                  política de privacidad
+                </a>
+                .
+              </span>
             </label>
-            <p className="mt-2 rounded-lg border border-brand-primary/15 bg-surface/70 p-3 text-xs leading-relaxed text-ink/70">
-              {REVIEW_TERMS}
-            </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
