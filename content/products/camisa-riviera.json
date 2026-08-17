@@ -1,0 +1,27 @@
+{
+  "id": "camisa-riviera",
+  "name": "Camisa Riviera",
+  "category": "Camisas",
+  "priceCOP": 180000,
+  "colors": [
+    {
+      "name": "Marfil",
+      "hex": "#f3f2ef",
+      "image": {
+        "label": "Camisa Riviera — Marfil"
+      }
+    },
+    {
+      "name": "Ocre",
+      "hex": "#b08d57",
+      "image": {
+        "label": "Camisa Riviera — Ocre"
+      }
+    }
+  ],
+  "sizes": ["S", "M", "L", "XL"],
+  "fabric": "Popelina de algodón",
+  "care": "Lavar a máquina en ciclo suave con agua fría. Secar a la sombra.",
+  "editorial": "Del escritorio a la orilla del mar sin cambiar de camisa: cortes limpios y un tono de tierra que el Caribe reconoce al instante.",
+  "sortOrder": 5
+}

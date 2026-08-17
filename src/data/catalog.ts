@@ -1,9 +1,17 @@
 /**
- * ANV·BAR — Catálogo (fuente única de contenido reemplazable).
+ * ANV·BAR — Catálogo (contenido proveniente de archivos editables).
+ *
+ * Los datos (productos, testimonios, perfil de la diseñadora y categorías) se
+ * cargan en tiempo de build desde el directorio `content/` del proyecto. El
+ * equipo edita esos archivos desde el admin (Decap CMS) sin tocar código; el
+ * bundle los empaqueta y la interfaz los consume exactamente igual que antes.
  *
  * CÓMO EDITAR EL SITIO SIN TOCAR CÓDIGO:
- *  - Cambia precios, nombres, telas, cuidados o textos editoriales en PRODUCTS.
- *  - Cambia testimonios en TESTIMONIALS y el perfil de la diseñadora en DESIGNER.
+ *  - Productos: un archivo JSON por pieza en content/products/. El orden de
+ *    presentación del catálogo lo controla el campo `sortOrder` (0, 1, 2…).
+ *  - Testimonios: content/testimonials.json. Perfil de la diseñadora:
+ *    content/designer.json. Categorías: content/categories.json (su orden es
+ *    el de presentación del catálogo).
  *  - Reemplaza una foto: asigna `src` en la variante de color (ruta dentro de
  *    /public o URL externa). Mientras `src` quede vacío, la interfaz muestra un
  *    placeholder tipográfico elegante con `label`.
@@ -98,10 +106,76 @@ export type DesignerProfile = {
 }
 
 /* ------------------------------------------------------------------ */
+/* Carga de contenido (archivos JSON en content/)                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Devuelve el contenido de un único archivo JSON de `content/`, comprobando
+ * que exista. Lanza un error claro si falta, para detectarlo al levantar el
+ * sitio (dev/build) y no con un catálogo silenciosamente roto.
+ */
+function singleContentFile(entries: [string, unknown][], label: string): unknown {
+  if (entries.length === 0) {
+    throw new Error(`[catalog] No se encontró ${label}. Es un archivo de contenido obligatorio.`)
+  }
+  return entries[0][1]
+}
+
+/**
+ * Normaliza una lista que puede venir como arreglo raíz del JSON, o como
+ * objeto con esa clave (la forma que usa Decap CMS al guardar file
+ * collections). Lanza un error claro si el contenido no coincide.
+ */
+function listFromJson(raw: unknown, key: string, label: string): unknown[] {
+  const list = Array.isArray(raw)
+    ? raw
+    : typeof raw === 'object' && raw !== null && Array.isArray((raw as Record<string, unknown>)[key])
+      ? ((raw as Record<string, unknown>)[key] as unknown[])
+      : null
+  if (list === null) {
+    throw new Error(
+      `[catalog] El contenido de ${label} debe ser una lista JSON o un objeto con la clave "${key}".`,
+    )
+  }
+  return list
+}
+
+const categories: string[] = listFromJson(
+  singleContentFile(
+    Object.entries(
+      import.meta.glob('../../content/categories.json', { eager: true, import: 'default' }),
+    ),
+    'content/categories.json',
+  ),
+  'categories',
+  'content/categories.json',
+).map((category, index) => {
+  if (typeof category !== 'string' || category.trim() === '') {
+    throw new Error(
+      `[catalog] La categoría #${index + 1} de content/categories.json debe ser texto no vacío.`,
+    )
+  }
+  return category.trim()
+})
+
+const seenCategories = new Set<string>()
+for (const category of categories) {
+  if (seenCategories.has(category)) {
+    throw new Error(`[catalog] content/categories.json repite la categoría "${category}".`)
+  }
+  seenCategories.add(category)
+}
+
+/* ------------------------------------------------------------------ */
 /* Categorías del catálogo (orden de presentación "todo a la vista")   */
 /* ------------------------------------------------------------------ */
 
-export const CATEGORIES = [
+/**
+ * Lista de categorías con su orden de presentación. En runtime proviene de
+ * content/categories.json (editable desde el admin); el tipo se mantiene como
+ * tupla readonly de las 7 categorías vigentes (contrato de la interfaz).
+ */
+export const CATEGORIES = categories as unknown as readonly [
   'Vestidos',
   'Conjuntos',
   'Camisas',
@@ -109,291 +183,210 @@ export const CATEGORIES = [
   'Pantalones',
   'Sets',
   'Accesorios',
-] as const
+]
 
 export type ProductCategory = (typeof CATEGORIES)[number]
 
 /* ------------------------------------------------------------------ */
-/* Productos de ejemplo (colección RUBRA)                              */
+/* Productos (un archivo JSON por pieza en content/products/)          */
 /* ------------------------------------------------------------------ */
 
-export const PRODUCTS: Product[] = [
-  {
-    id: 'vestido-rubra-nocturno',
-    name: 'Vestido RUBRA Nocturno',
-    category: 'Vestidos',
-    priceCOP: 320000,
-    colors: [
-      {
-        name: 'Burdeo',
-        hex: '#58232c',
-        image: {
-          src: '/imagenes/vestido-rubra-nocturno.jpg',
-          secondarySrc: '/imagenes/vestido-rubra-nocturno-v2.jpg',
-          label: 'Vestido RUBRA Nocturno — Burdeo',
-        },
-      },
-      { name: 'Negro', hex: '#000000', image: { label: 'Vestido RUBRA Nocturno — Negro' } },
-    ],
-    featuredImage: {
-      src: '/imagenes/featured-rubra-nocturno.jpg',
-      secondarySrc: '/imagenes/featured-rubra-nocturno-v2.jpg',
-      label: 'Vestido RUBRA Nocturno — Pieza estrella',
-    },
-    sizes: ['S', 'M', 'L'],
-    fabric: 'Gasa de seda',
-    care: 'Lavar a mano con agua fría. Secar a la sombra. No usar blanqueador.',
-    editorial:
-      'El vestido que abre la colección RUBRA, hecho para las noches en las que la brisa también se viste. Cae con el peso justo: ligera, roja, inolvidable.',
-    isNew: true,
-    addedAt: '2026-08-15',
-  },
-  {
-    id: 'vestido-trinitaria',
-    name: 'Vestido Trinitaria',
-    category: 'Vestidos',
-    priceCOP: 280000,
-    colors: [
-      {
-        name: 'Marfil',
-        hex: '#f3f2ef',
-        image: {
-          src: '/imagenes/vestido-trinitaria.jpg',
-          secondarySrc: '/imagenes/vestido-trinitaria-v2.jpg',
-          label: 'Vestido Trinitaria — Marfil',
-        },
-      },
-      { name: 'Rosa empolvado', hex: '#d9b8ac', image: { label: 'Vestido Trinitaria — Rosa empolvado' } },
-    ],
-    sizes: ['XS', 'S', 'M', 'L'],
-    fabric: 'Viscosa lavable',
-    care: 'Lavar a mano con agua fría. Secar a la sombra. No usar secadora.',
-    editorial:
-      'La trinitaria se hizo vestido: tres pétalos y una silueta que se mueve contigo desde el café de la mañana hasta el primer destello del atardecer.',
-    isNew: true,
-    addedAt: '2026-08-14',
-  },
-  {
-    id: 'vestido-ceremonia-marfil',
-    name: 'Vestido Ceremonia Marfil',
-    category: 'Vestidos',
-    priceCOP: 380000,
-    colors: [
-      {
-        name: 'Marfil',
-        hex: '#f3f2ef',
-        image: {
-          src: '/imagenes/vestido-ceremonia-marfil.jpg',
-          secondarySrc: '/imagenes/vestido-ceremonia-marfil-v2.jpg',
-          label: 'Vestido Ceremonia Marfil — Marfil',
-        },
-      },
-      { name: 'Dorado', hex: '#8c6d51', image: { label: 'Vestido Ceremonia — Dorado' } },
-    ],
-    sizes: ['S', 'M', 'L'],
-    fabric: 'Crepé de poliéster',
-    care: 'Lavar en seco o a mano con agua fría. Planchar a baja temperatura por el revés.',
-    editorial:
-      'Para el instante en que entras por la puerta: marfil y un brillo contenido que acompaña sin pedir permiso. Tú guardas la fecha; él guarda tu silueta.',
-    isNew: true,
-    addedAt: '2026-08-13',
-  },
-  {
-    id: 'conjunto-trinitaria',
-    name: 'Conjunto Trinitaria',
-    category: 'Conjuntos',
-    priceCOP: 260000,
-    colors: [
-      { name: 'Burdeo', hex: '#58232c', image: { label: 'Conjunto Trinitaria — Burdeo' } },
-      { name: 'Marfil', hex: '#f3f2ef', image: { label: 'Conjunto Trinitaria — Marfil' } },
-    ],
-    sizes: ['XS', 'S', 'M', 'L'],
-    fabric: 'Popelina de algodón',
-    care: 'Lavar a máquina en ciclo suave con agua fría. Secar a la sombra.',
-    editorial:
-      'El conjunto que le dio nombre a RUBRA: superior y falda en el mismo color de piel de la flor. Vístete del Caribe sin esforzarte.',
-    isNew: true,
-    addedAt: '2026-08-12',
-  },
-  {
-    id: 'conjunto-brisa-caribe',
-    name: 'Conjunto Brisa Caribe',
-    category: 'Conjuntos',
-    priceCOP: 240000,
-    colors: [
-      { name: 'Marfil', hex: '#f3f2ef', image: { label: 'Conjunto Brisa Caribe — Marfil' } },
-      { name: 'Azul noche', hex: '#1e2a3a', image: { label: 'Conjunto Brisa Caribe — Azul noche' } },
-    ],
-    sizes: ['S', 'M', 'L', 'XL'],
-    fabric: 'Lino bien vestido',
-    care: 'Lavar a mano con agua fría. No retorcer. Planchar ligeramente húmedo.',
-    editorial:
-      'El lino que respira contigo, liviano como la brisa de la tarde en la playa. Un conjunto fresco que llega vestido donde la arena empieza.',
-  },
-  {
-    id: 'camisa-riviera',
-    name: 'Camisa Riviera',
-    category: 'Camisas',
-    priceCOP: 180000,
-    colors: [
-      { name: 'Marfil', hex: '#f3f2ef', image: { label: 'Camisa Riviera — Marfil' } },
-      { name: 'Ocre', hex: '#b08d57', image: { label: 'Camisa Riviera — Ocre' } },
-    ],
-    sizes: ['S', 'M', 'L', 'XL'],
-    fabric: 'Popelina de algodón',
-    care: 'Lavar a máquina en ciclo suave con agua fría. Secar a la sombra.',
-    editorial:
-      'Del escritorio a la orilla del mar sin cambiar de camisa: cortes limpios y un tono de tierra que el Caribe reconoce al instante.',
-  },
-  {
-    id: 'camisa-onix',
-    name: 'Camisa Ónix',
-    category: 'Camisas',
-    priceCOP: 190000,
-    colors: [
-      { name: 'Negro', hex: '#000000', image: { label: 'Camisa Ónix — Negro' } },
-      { name: 'Dorado', hex: '#8c6d51', image: { label: 'Camisa Ónix — Dorado' } },
-    ],
-    sizes: ['S', 'M', 'L'],
-    fabric: 'Seda satinada',
-    care: 'Lavar a mano con agua fría. Secar a la sombra. No usar secadora.',
-    editorial:
-      'Negro para la noche, dorado para el detalle: la seda convierte cualquier plan en ocasión.',
-  },
-  {
-    id: 'falda-plisada-contraluz',
-    name: 'Falda Plisada Contraluz',
-    category: 'Faldas',
-    priceCOP: 220000,
-    colors: [
-      {
-        name: 'Dorado',
-        hex: '#8c6d51',
-        image: {
-          src: '/imagenes/falda-plisada-contraluz.jpg',
-          secondarySrc: '/imagenes/falda-plisada-contraluz-v2.jpg',
-          label: 'Falda Plisada — Dorado',
-        },
-      },
-      { name: 'Burdeo', hex: '#58232c', image: { label: 'Falda Plisada — Burdeo' } },
-    ],
-    sizes: ['XS', 'S', 'M', 'L'],
-    fabric: 'Gasa de seda',
-    care: 'Lavar a mano con agua fría. Secar a la sombra. No usar blanqueador.',
-    editorial:
-      'Pliegues que atrapan el contraluz y lo sueltan al caminar. Se mueve primero; tú solo entra haciendo favor.',
-  },
-  {
-    id: 'pantalon-linea-delta',
-    name: 'Pantalón Línea Delta',
-    category: 'Pantalones',
-    priceCOP: 210000,
-    colors: [
-      { name: 'Burdeo profundo', hex: '#390f12', image: { label: 'Pantalón Línea Delta — Burdeo profundo' } },
-      { name: 'Negro', hex: '#000000', image: { label: 'Pantalón Línea Delta — Negro' } },
-    ],
-    sizes: ['S', 'M', 'L', 'XL'],
-    fabric: 'Crepé de poliéster',
-    care: 'Lavar a mano con agua fría. Secar a la sombra. Planchar a baja temperatura.',
-    editorial:
-      'La pierna recta que estira la silueta y no olvida el puerto. Del centro de la ciudad a la Santa Marta de siempre, con caída impecable.',
-  },
-  {
-    id: 'set-resort-cayena',
-    name: 'Set Resort Cayena',
-    category: 'Sets',
-    priceCOP: 300000,
-    colors: [
-      {
-        name: 'Coral',
-        hex: '#d97a63',
-        image: {
-          src: '/imagenes/set-resort-cayena.jpg',
-          secondarySrc: '/imagenes/set-resort-cayena-v2.jpg',
-          label: 'Set Resort Cayena — Coral',
-        },
-      },
-      { name: 'Marfil', hex: '#f3f2ef', image: { label: 'Set Resort Cayena — Marfil' } },
-    ],
-    sizes: ['S', 'M', 'L'],
-    fabric: 'Viscosa lavable',
-    care: 'Lavar a mano con agua fría. Secar a la sombra. No usar secadora.',
-    editorial:
-      'La cayena florece en un tres piezas que se combina solo: resort de día, cena junto al mar cuando cae la noche.',
-    isNew: true,
-    addedAt: '2026-08-11',
-  },
-  {
-    id: 'set-bahia',
-    name: 'Set Bahía',
-    category: 'Sets',
-    priceCOP: 290000,
-    colors: [
-      { name: 'Verde salvia', hex: '#9aa38b', image: { label: 'Set Bahía — Verde salvia' } },
-      { name: 'Marfil', hex: '#f3f2ef', image: { label: 'Set Bahía — Marfil' } },
-    ],
-    sizes: ['XS', 'S', 'M', 'L'],
-    fabric: 'Popelina de algodón',
-    care: 'Lavar a máquina en ciclo suave con agua fría. Secar a la sombra.',
-    editorial:
-      'Tonos de salvia y la calma de una bahía a media tarde, en dos piezas que abrazan el descanso.',
-  },
-  {
-    id: 'turbante-seda-rubra',
-    name: 'Turbante Seda RUBRA',
-    category: 'Accesorios',
-    priceCOP: 95000,
-    colors: [
-      { name: 'Burdeo profundo', hex: '#390f12', image: { label: 'Turbante Seda — Burdeo profundo' } },
-      { name: 'Dorado', hex: '#8c6d51', image: { label: 'Turbante Seda — Dorado' } },
-      { name: 'Negro', hex: '#000000', image: { label: 'Turbante Seda — Negro' } },
-    ],
-    sizes: ['Único'],
-    fabric: 'Seda satinada',
-    care: 'Lavar a mano con agua fría. Secar a la sombra. No planchar directamente.',
-    editorial:
-      'El cierre perfecto de RUBRA: seda que corona cualquier look con la firma silenciosa de la colección.',
-    isNew: true,
-    addedAt: '2026-08-10',
-  },
-]
+function requiredString(product: Record<string, unknown>, key: string, file: string): string {
+  const value = product[key]
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error(`[catalog] "${file}": el campo "${key}" es obligatorio y debe ser texto no vacío.`)
+  }
+  return value
+}
+
+function parseImage(where: string, raw: unknown, fallbackLabel: string): ProductImage {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    throw new Error(`[catalog] ${where} espera un objeto de imagen.`)
+  }
+  const image = raw as Record<string, unknown>
+  const src = typeof image.src === 'string' && image.src.trim() !== '' ? image.src : undefined
+  const secondarySrc =
+    typeof image.secondarySrc === 'string' && image.secondarySrc.trim() !== ''
+      ? image.secondarySrc
+      : undefined
+  const label =
+    typeof image.label === 'string' && image.label.trim() !== '' ? image.label : fallbackLabel
+  return {
+    ...(typeof src === 'string' ? { src } : {}),
+    ...(typeof secondarySrc === 'string' ? { secondarySrc } : {}),
+    label,
+  }
+}
+
+function parseColor(file: string, raw: unknown, index: number): ProductColor {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    throw new Error(`[catalog] "${file}": la variante de color #${index + 1} debe ser un objeto.`)
+  }
+  const color = raw as Record<string, unknown>
+  const name = typeof color.name === 'string' ? color.name : ''
+  const hex = typeof color.hex === 'string' ? color.hex : ''
+  if (name.trim() === '' || hex.trim() === '') {
+    throw new Error(`[catalog] "${file}": cada variante de color necesita "name" y "hex" no vacíos.`)
+  }
+  const parsed: ProductColor = { name, hex }
+  if (color.image != null) {
+    parsed.image = parseImage(`"${file}" (color "${name}")`, color.image, name)
+  }
+  return parsed
+}
+
+function parseProductFile(file: string, rawContent: unknown): { order: number; data: Product } {
+  if (typeof rawContent !== 'object' || rawContent === null || Array.isArray(rawContent)) {
+    throw new Error(`[catalog] "${file}": el contenido debe ser un objeto JSON con un producto.`)
+  }
+  const product = rawContent as Record<string, unknown>
+
+  const id = requiredString(product, 'id', file)
+  const name = requiredString(product, 'name', file)
+  const category = requiredString(product, 'category', file)
+  if (!categories.includes(category)) {
+    throw new Error(
+      `[catalog] "${file}": la categoría "${category}" no figura en content/categories.json.`,
+    )
+  }
+
+  const priceCOP = product.priceCOP
+  if (typeof priceCOP !== 'number' || !Number.isInteger(priceCOP) || priceCOP < 0) {
+    throw new Error(
+      `[catalog] "${file}": priceCOP debe ser un número entero en pesos colombianos, sin decimales.`,
+    )
+  }
+
+  const rawColors = product.colors
+  if (!Array.isArray(rawColors) || rawColors.length === 0) {
+    throw new Error(`[catalog] "${file}": colors debe ser una lista no vacía de variantes de color.`)
+  }
+  const colors = rawColors.map((color, index) => parseColor(file, color, index))
+
+  const rawSizes = product.sizes
+  if (!Array.isArray(rawSizes)) {
+    throw new Error(`[catalog] "${file}": sizes debe ser una lista de tallas.`)
+  }
+  const sizes = rawSizes
+    .map((size) => (typeof size === 'string' ? size.trim() : ''))
+    .filter((size) => size !== '')
+  if (sizes.length === 0) {
+    throw new Error(`[catalog] "${file}": sizes no puede quedar vacío.`)
+  }
+
+  const order = product.sortOrder
+  if (typeof order !== 'number' || !Number.isFinite(order)) {
+    throw new Error(
+      `[catalog] "${file}": sortOrder es obligatorio y debe ser un número (orden de presentación).`,
+    )
+  }
+
+  const data: Product = {
+    id,
+    name,
+    category: category as ProductCategory,
+    priceCOP,
+    colors,
+    sizes,
+    fabric: requiredString(product, 'fabric', file),
+    care: requiredString(product, 'care', file),
+    editorial: requiredString(product, 'editorial', file),
+  }
+  if (product.featuredImage != null) {
+    data.featuredImage = parseImage(`"${file}" (featuredImage)`, product.featuredImage, name)
+  }
+  if (product.isNew === true) {
+    data.isNew = true
+  }
+  if (typeof product.addedAt === 'string' && product.addedAt !== '') {
+    data.addedAt = product.addedAt
+  }
+  if (typeof product.badge === 'string' && product.badge !== '') {
+    data.badge = product.badge
+  }
+
+  return { order, data }
+}
+
+const productEntries = Object.entries(
+  import.meta.glob('../../content/products/*.json', { eager: true, import: 'default' }),
+)
+if (productEntries.length === 0) {
+  throw new Error('[catalog] No hay archivos en content/products/. Cada producto requiere su archivo JSON.')
+}
+
+/**
+ * Productos del catálogo en el orden de presentación definido por `sortOrder`
+ * en cada archivo (el orden del glob JSON no está garantizado). El campo
+ * `sortOrder` se consume aquí y NO se expone en el tipo Product.
+ */
+export const PRODUCTS: Product[] = productEntries
+  .map(([file, rawContent]) => parseProductFile(file, rawContent))
+  .sort((a, b) => a.order - b.order)
+  .map(({ data }) => data)
 
 /* ------------------------------------------------------------------ */
-/* Testimonios (texto de ejemplo, reemplazable)                        */
+/* Testimonios (content/testimonials.json)                             */
 /* ------------------------------------------------------------------ */
 
-export const TESTIMONIALS: Testimonial[] = [
-  {
-    name: 'Valentina R.',
-    city: 'Barranquilla',
-    text: 'El vestido llegó en el tiempo prometido y el acabado se siente hecho a mano. La tela es todavía más bonita en persona.',
-  },
-  {
-    name: 'María José P.',
-    city: 'Cartagena',
-    text: 'Pedí el Conjunto Trinitaria por WhatsApp y en tres días estaba listo. Anays me ayudó a elegir la talla perfecta.',
-  },
-  {
-    name: 'Daniela M.',
-    city: 'Santa Marta',
-    text: 'La atención fue cálida y el envío al Caribe puntual. Ya tengo dos piezas y la tercera está en camino.',
-  },
-]
+const testimonialsEntries = listFromJson(
+  singleContentFile(
+    Object.entries(
+      import.meta.glob('../../content/testimonials.json', { eager: true, import: 'default' }),
+    ),
+    'content/testimonials.json',
+  ),
+  'testimonials',
+  'content/testimonials.json',
+)
+
+const parsedTestimonials: Testimonial[] = testimonialsEntries.map((item, index) => {
+  if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+    throw new Error(`[catalog] El testimonio #${index + 1} de content/testimonials.json debe ser un objeto.`)
+  }
+  const testimonial = item as Record<string, unknown>
+  const name = testimonial.name
+  const text = testimonial.text
+  if (typeof name !== 'string' || name.trim() === '' || typeof text !== 'string' || text.trim() === '') {
+    throw new Error(
+      `[catalog] El testimonio #${index + 1} necesita "name" y "text" no vacíos (content/testimonials.json).`,
+    )
+  }
+  const parsed: Testimonial = { name, text }
+  if (typeof testimonial.city === 'string' && testimonial.city !== '') {
+    parsed.city = testimonial.city
+  }
+  return parsed
+})
+
+export const TESTIMONIALS: Testimonial[] = parsedTestimonials
 
 /* ------------------------------------------------------------------ */
-/* Perfil de la diseñadora (texto de ejemplo, reemplazable)            */
+/* Perfil de la diseñadora (content/designer.json)                     */
 /* ------------------------------------------------------------------ */
 
+const designerRaw = singleContentFile(
+  Object.entries(import.meta.glob('../../content/designer.json', { eager: true, import: 'default' })),
+  'content/designer.json',
+)
+if (typeof designerRaw !== 'object' || designerRaw === null || Array.isArray(designerRaw)) {
+  throw new Error('[catalog] content/designer.json debe ser un objeto con el perfil de la diseñadora.')
+}
+const designer = designerRaw as Record<string, unknown>
+const collectionRaw = designer.collection
+if (typeof collectionRaw !== 'object' || collectionRaw === null || Array.isArray(collectionRaw)) {
+  throw new Error('[catalog] content/designer.json necesita un objeto "collection" con "name" y "story".')
+}
+const collection = collectionRaw as Record<string, unknown>
 export const DESIGNER: DesignerProfile = {
-  name: 'Anays Vargas',
-  role: 'Diseñadora y fundadora de ANV·BAR',
-  bio: 'Diseñadora caribeña de oficio y de nacimiento: crea piezas femeninas, ligeras y elegantes, cosidas a mano bajo pedido.',
+  name: requiredString(designer, 'name', 'content/designer.json'),
+  role: requiredString(designer, 'role', 'content/designer.json'),
+  bio: requiredString(designer, 'bio', 'content/designer.json'),
   collection: {
-    name: 'RUBRA',
-    story:
-      'RUBRA nace del rojo de la trinitaria, la flor de tres pétalos que enciende los jardines del Caribe. Tres pétalos, tres intensidades y una misma ligereza: cada pieza atrapa ese juego de color y aire para vestir el día y la noche de quien la lleva.',
+    name: requiredString(collection, 'name', 'content/designer.json'),
+    story: requiredString(collection, 'story', 'content/designer.json'),
   },
-  claim: 'Donde la ligereza se convierte en elegancia',
+  claim: requiredString(designer, 'claim', 'content/designer.json'),
 }
 
 /* ------------------------------------------------------------------ */

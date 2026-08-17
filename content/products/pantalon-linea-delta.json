@@ -1,0 +1,27 @@
+{
+  "id": "pantalon-linea-delta",
+  "name": "Pantalón Línea Delta",
+  "category": "Pantalones",
+  "priceCOP": 210000,
+  "colors": [
+    {
+      "name": "Burdeo profundo",
+      "hex": "#390f12",
+      "image": {
+        "label": "Pantalón Línea Delta — Burdeo profundo"
+      }
+    },
+    {
+      "name": "Negro",
+      "hex": "#000000",
+      "image": {
+        "label": "Pantalón Línea Delta — Negro"
+      }
+    }
+  ],
+  "sizes": ["S", "M", "L", "XL"],
+  "fabric": "Crepé de poliéster",
+  "care": "Lavar a mano con agua fría. Secar a la sombra. Planchar a baja temperatura.",
+  "editorial": "La pierna recta que estira la silueta y no olvida el puerto. Del centro de la ciudad a la Santa Marta de siempre, con caída impecable.",
+  "sortOrder": 8
+}

@@ -1,0 +1,31 @@
+{
+  "id": "vestido-trinitaria",
+  "name": "Vestido Trinitaria",
+  "category": "Vestidos",
+  "priceCOP": 280000,
+  "colors": [
+    {
+      "name": "Marfil",
+      "hex": "#f3f2ef",
+      "image": {
+        "src": "/imagenes/vestido-trinitaria.jpg",
+        "secondarySrc": "/imagenes/vestido-trinitaria-v2.jpg",
+        "label": "Vestido Trinitaria — Marfil"
+      }
+    },
+    {
+      "name": "Rosa empolvado",
+      "hex": "#d9b8ac",
+      "image": {
+        "label": "Vestido Trinitaria — Rosa empolvado"
+      }
+    }
+  ],
+  "sizes": ["XS", "S", "M", "L"],
+  "fabric": "Viscosa lavable",
+  "care": "Lavar a mano con agua fría. Secar a la sombra. No usar secadora.",
+  "editorial": "La trinitaria se hizo vestido: tres pétalos y una silueta que se mueve contigo desde el café de la mañana hasta el primer destello del atardecer.",
+  "isNew": true,
+  "addedAt": "2026-08-14",
+  "sortOrder": 1
+}

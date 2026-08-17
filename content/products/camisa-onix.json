@@ -1,0 +1,27 @@
+{
+  "id": "camisa-onix",
+  "name": "Camisa Ónix",
+  "category": "Camisas",
+  "priceCOP": 190000,
+  "colors": [
+    {
+      "name": "Negro",
+      "hex": "#000000",
+      "image": {
+        "label": "Camisa Ónix — Negro"
+      }
+    },
+    {
+      "name": "Dorado",
+      "hex": "#8c6d51",
+      "image": {
+        "label": "Camisa Ónix — Dorado"
+      }
+    }
+  ],
+  "sizes": ["S", "M", "L"],
+  "fabric": "Seda satinada",
+  "care": "Lavar a mano con agua fría. Secar a la sombra. No usar secadora.",
+  "editorial": "Negro para la noche, dorado para el detalle: la seda convierte cualquier plan en ocasión.",
+  "sortOrder": 6
+}

@@ -1,0 +1,27 @@
+{
+  "id": "conjunto-brisa-caribe",
+  "name": "Conjunto Brisa Caribe",
+  "category": "Conjuntos",
+  "priceCOP": 240000,
+  "colors": [
+    {
+      "name": "Marfil",
+      "hex": "#f3f2ef",
+      "image": {
+        "label": "Conjunto Brisa Caribe — Marfil"
+      }
+    },
+    {
+      "name": "Azul noche",
+      "hex": "#1e2a3a",
+      "image": {
+        "label": "Conjunto Brisa Caribe — Azul noche"
+      }
+    }
+  ],
+  "sizes": ["S", "M", "L", "XL"],
+  "fabric": "Lino bien vestido",
+  "care": "Lavar a mano con agua fría. No retorcer. Planchar ligeramente húmedo.",
+  "editorial": "El lino que respira contigo, liviano como la brisa de la tarde en la playa. Un conjunto fresco que llega vestido donde la arena empieza.",
+  "sortOrder": 4
+}

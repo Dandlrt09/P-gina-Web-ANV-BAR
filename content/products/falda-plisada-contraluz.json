@@ -1,0 +1,29 @@
+{
+  "id": "falda-plisada-contraluz",
+  "name": "Falda Plisada Contraluz",
+  "category": "Faldas",
+  "priceCOP": 220000,
+  "colors": [
+    {
+      "name": "Dorado",
+      "hex": "#8c6d51",
+      "image": {
+        "src": "/imagenes/falda-plisada-contraluz.jpg",
+        "secondarySrc": "/imagenes/falda-plisada-contraluz-v2.jpg",
+        "label": "Falda Plisada — Dorado"
+      }
+    },
+    {
+      "name": "Burdeo",
+      "hex": "#58232c",
+      "image": {
+        "label": "Falda Plisada — Burdeo"
+      }
+    }
+  ],
+  "sizes": ["XS", "S", "M", "L"],
+  "fabric": "Gasa de seda",
+  "care": "Lavar a mano con agua fría. Secar a la sombra. No usar blanqueador.",
+  "editorial": "Pliegues que atrapan el contraluz y lo sueltan al caminar. Se mueve primero; tú solo entra haciendo favor.",
+  "sortOrder": 7
+}

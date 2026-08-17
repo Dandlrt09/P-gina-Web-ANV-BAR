@@ -1,0 +1,31 @@
+{
+  "id": "set-resort-cayena",
+  "name": "Set Resort Cayena",
+  "category": "Sets",
+  "priceCOP": 300000,
+  "colors": [
+    {
+      "name": "Coral",
+      "hex": "#d97a63",
+      "image": {
+        "src": "/imagenes/set-resort-cayena.jpg",
+        "secondarySrc": "/imagenes/set-resort-cayena-v2.jpg",
+        "label": "Set Resort Cayena — Coral"
+      }
+    },
+    {
+      "name": "Marfil",
+      "hex": "#f3f2ef",
+      "image": {
+        "label": "Set Resort Cayena — Marfil"
+      }
+    }
+  ],
+  "sizes": ["S", "M", "L"],
+  "fabric": "Viscosa lavable",
+  "care": "Lavar a mano con agua fría. Secar a la sombra. No usar secadora.",
+  "editorial": "La cayena florece en un tres piezas que se combina solo: resort de día, cena junto al mar cuando cae la noche.",
+  "isNew": true,
+  "addedAt": "2026-08-11",
+  "sortOrder": 9
+}

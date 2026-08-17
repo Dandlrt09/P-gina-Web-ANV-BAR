@@ -1,0 +1,36 @@
+{
+  "id": "turbante-seda-rubra",
+  "name": "Turbante Seda RUBRA",
+  "category": "Accesorios",
+  "priceCOP": 95000,
+  "colors": [
+    {
+      "name": "Burdeo profundo",
+      "hex": "#390f12",
+      "image": {
+        "label": "Turbante Seda — Burdeo profundo"
+      }
+    },
+    {
+      "name": "Dorado",
+      "hex": "#8c6d51",
+      "image": {
+        "label": "Turbante Seda — Dorado"
+      }
+    },
+    {
+      "name": "Negro",
+      "hex": "#000000",
+      "image": {
+        "label": "Turbante Seda — Negro"
+      }
+    }
+  ],
+  "sizes": ["Único"],
+  "fabric": "Seda satinada",
+  "care": "Lavar a mano con agua fría. Secar a la sombra. No planchar directamente.",
+  "editorial": "El cierre perfecto de RUBRA: seda que corona cualquier look con la firma silenciosa de la colección.",
+  "isNew": true,
+  "addedAt": "2026-08-10",
+  "sortOrder": 11
+}

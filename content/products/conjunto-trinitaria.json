@@ -1,0 +1,29 @@
+{
+  "id": "conjunto-trinitaria",
+  "name": "Conjunto Trinitaria",
+  "category": "Conjuntos",
+  "priceCOP": 260000,
+  "colors": [
+    {
+      "name": "Burdeo",
+      "hex": "#58232c",
+      "image": {
+        "label": "Conjunto Trinitaria — Burdeo"
+      }
+    },
+    {
+      "name": "Marfil",
+      "hex": "#f3f2ef",
+      "image": {
+        "label": "Conjunto Trinitaria — Marfil"
+      }
+    }
+  ],
+  "sizes": ["XS", "S", "M", "L"],
+  "fabric": "Popelina de algodón",
+  "care": "Lavar a máquina en ciclo suave con agua fría. Secar a la sombra.",
+  "editorial": "El conjunto que le dio nombre a RUBRA: superior y falda en el mismo color de piel de la flor. Vístete del Caribe sin esforzarte.",
+  "isNew": true,
+  "addedAt": "2026-08-12",
+  "sortOrder": 3
+}

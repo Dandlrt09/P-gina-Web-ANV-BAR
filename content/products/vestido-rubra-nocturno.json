@@ -1,0 +1,36 @@
+{
+  "id": "vestido-rubra-nocturno",
+  "name": "Vestido RUBRA Nocturno",
+  "category": "Vestidos",
+  "priceCOP": 320000,
+  "colors": [
+    {
+      "name": "Burdeo",
+      "hex": "#58232c",
+      "image": {
+        "src": "/imagenes/vestido-rubra-nocturno.jpg",
+        "secondarySrc": "/imagenes/vestido-rubra-nocturno-v2.jpg",
+        "label": "Vestido RUBRA Nocturno — Burdeo"
+      }
+    },
+    {
+      "name": "Negro",
+      "hex": "#000000",
+      "image": {
+        "label": "Vestido RUBRA Nocturno — Negro"
+      }
+    }
+  ],
+  "featuredImage": {
+    "src": "/imagenes/featured-rubra-nocturno.jpg",
+    "secondarySrc": "/imagenes/featured-rubra-nocturno-v2.jpg",
+    "label": "Vestido RUBRA Nocturno — Pieza estrella"
+  },
+  "sizes": ["S", "M", "L"],
+  "fabric": "Gasa de seda",
+  "care": "Lavar a mano con agua fría. Secar a la sombra. No usar blanqueador.",
+  "editorial": "El vestido que abre la colección RUBRA, hecho para las noches en las que la brisa también se viste. Cae con el peso justo: ligera, roja, inolvidable.",
+  "isNew": true,
+  "addedAt": "2026-08-15",
+  "sortOrder": 0
+}

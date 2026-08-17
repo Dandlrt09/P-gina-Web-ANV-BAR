@@ -1,0 +1,31 @@
+{
+  "id": "vestido-ceremonia-marfil",
+  "name": "Vestido Ceremonia Marfil",
+  "category": "Vestidos",
+  "priceCOP": 380000,
+  "colors": [
+    {
+      "name": "Marfil",
+      "hex": "#f3f2ef",
+      "image": {
+        "src": "/imagenes/vestido-ceremonia-marfil.jpg",
+        "secondarySrc": "/imagenes/vestido-ceremonia-marfil-v2.jpg",
+        "label": "Vestido Ceremonia Marfil — Marfil"
+      }
+    },
+    {
+      "name": "Dorado",
+      "hex": "#8c6d51",
+      "image": {
+        "label": "Vestido Ceremonia — Dorado"
+      }
+    }
+  ],
+  "sizes": ["S", "M", "L"],
+  "fabric": "Crepé de poliéster",
+  "care": "Lavar en seco o a mano con agua fría. Planchar a baja temperatura por el revés.",
+  "editorial": "Para el instante en que entras por la puerta: marfil y un brillo contenido que acompaña sin pedir permiso. Tú guardas la fecha; él guarda tu silueta.",
+  "isNew": true,
+  "addedAt": "2026-08-13",
+  "sortOrder": 2
+}

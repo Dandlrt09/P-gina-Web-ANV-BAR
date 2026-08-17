@@ -1,0 +1,27 @@
+{
+  "id": "set-bahia",
+  "name": "Set Bahía",
+  "category": "Sets",
+  "priceCOP": 290000,
+  "colors": [
+    {
+      "name": "Verde salvia",
+      "hex": "#9aa38b",
+      "image": {
+        "label": "Set Bahía — Verde salvia"
+      }
+    },
+    {
+      "name": "Marfil",
+      "hex": "#f3f2ef",
+      "image": {
+        "label": "Set Bahía — Marfil"
+      }
+    }
+  ],
+  "sizes": ["XS", "S", "M", "L"],
+  "fabric": "Popelina de algodón",
+  "care": "Lavar a máquina en ciclo suave con agua fría. Secar a la sombra.",
+  "editorial": "Tonos de salvia y la calma de una bahía a media tarde, en dos piezas que abrazan el descanso.",
+  "sortOrder": 10
+}
