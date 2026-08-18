@@ -1,0 +1,44 @@
+{
+  "fabric": "Prueba",
+  "editorial": "Prueba",
+  "name": "Faldita",
+  "sortOrder": 0,
+  "colors": [
+    {
+      "name": "Rojo",
+      "hex": "#FF0000",
+      "image": {
+        "src": "/imagenes/featured-rubra-nocturno.jpg",
+        "gallery": [
+          {
+            "src": "/imagenes/set-resort-cayena-v2.jpg"
+          },
+          {
+            "src": "/imagenes/tarjeta-6-v2.png"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Amarillo",
+      "hex": "#FFFF00",
+      "image": {
+        "src": "/imagenes/falda-plisada-contraluz-v2.jpg",
+        "gallery": [
+          {
+            "src": "/imagenes/falda-plisada-contraluz.jpg"
+          }
+        ]
+      }
+    }
+  ],
+  "care": "Prueba",
+  "sizes": [
+    "S",
+    "M"
+  ],
+  "isNew": true,
+  "id": "Falda-Prueba",
+  "priceCOP": 99998,
+  "category": "Faldas"
+}
