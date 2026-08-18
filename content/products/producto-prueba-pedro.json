@@ -8,8 +8,8 @@
       "name": "Burdeo",
       "hex": "#58232c",
       "image": {
-        "src": "",
-        "secondarySrc": ""
+        "src": "/imagenes/tarjeta-6.png",
+        "secondarySrc": "/imagenes/tarjeta-6-v2.png"
       }
     }
   ],
