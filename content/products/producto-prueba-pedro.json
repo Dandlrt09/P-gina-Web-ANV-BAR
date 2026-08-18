@@ -1,0 +1,20 @@
+{
+  "fabric": "Algodón de prueba",
+  "editorial": "Producto de prueba para verificar el panel.",
+  "name": "Vestido Prueba Pedro",
+  "sortOrder": 12,
+  "colors": [
+    {
+      "name": "Burdeo",
+      "hex": "#58232c"
+    }
+  ],
+  "care": "Lavar a mano",
+  "sizes": [
+    "SyM"
+  ],
+  "isNew": false,
+  "id": "producto-prueba-pedro",
+  "priceCOP": 122999,
+  "category": "Vestidos"
+}
