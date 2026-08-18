@@ -9,7 +9,7 @@
       "hex": "#8c6d51",
       "image": {
         "src": "/imagenes/falda-plisada-contraluz.jpg",
-        "secondarySrc": "/imagenes/falda-plisada-contraluz-v2.jpg",
+        "gallery": ["/imagenes/falda-plisada-contraluz-v2.jpg"],
         "label": "Falda Plisada — Dorado"
       }
     },

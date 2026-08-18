@@ -11,11 +11,11 @@ type ProductImageProps = {
  * Imagen de producto: muestra la foto real cuando existe `src`;
  * de lo contrario un placeholder tipográfico elegante con `label`.
  *
- * Si la foto tiene `secondarySrc`, al pasar el mouse se funde (crossfade)
- * hacia la secundaria y al quitarlo regresa a la principal. El fundido es
- * una transición de opacidad suave, distinta del cambio seco de `src`.
- * Respeta prefers-reduced-motion: sin cruce de imagen (solo el zoom de
- * tarjeta que ya maneja el CSS con motion-reduce).
+ * Si la foto tiene fotos adicionales en `gallery`, al pasar el mouse se funde
+ * (crossfade) hacia la primera de `gallery` y al quitarlo regresa a la
+ * principal. El fundido es una transición de opacidad suave, distinta del
+ * cambio seco de `src`. Respeta prefers-reduced-motion: sin cruce de imagen
+ * (solo el zoom de tarjeta que ya maneja el CSS con motion-reduce).
  */
 export function ProductImage({ image, alt, className = '' }: ProductImageProps) {
   const [hovered, setHovered] = useState(false)
@@ -28,7 +28,8 @@ export function ProductImage({ image, alt, className = '' }: ProductImageProps) 
   }, [])
 
   if (image?.src) {
-    const hasSecondary = Boolean(image.secondarySrc)
+    const secondary = image.gallery?.[0]
+    const hasSecondary = Boolean(secondary)
     const showSecondary = hovered && hasSecondary && !reducedRef.current
 
     if (hasSecondary) {
@@ -47,7 +48,7 @@ export function ProductImage({ image, alt, className = '' }: ProductImageProps) 
             }`}
           />
           <img
-            src={image.secondarySrc}
+            src={secondary}
             alt={alt}
             loading="lazy"
             aria-hidden={!showSecondary}

@@ -39,7 +39,7 @@ collections:
     editor:
       preview: false
     fields:
-      - { label: "Identificador", name: "id", widget: "string", hint: "Clave única del producto (se usa en enlaces y favoritos). No debe repetirse." }
+      - { label: "Identificador", name: "id", widget: "string", hint: "Clave única del producto (se usa en enlaces y favoritos). No debe repetirse. Ejemplo: vestido-floral-primavera." }
       - { label: "Nombre", name: "name", widget: "string" }
       - label: "Categoría"
         name: "category"
@@ -70,32 +70,55 @@ collections:
             required: false
             fields:
               - { label: "Foto principal", name: "src", widget: "image", required: false, hint: "Foto real de esta variante. Si queda vacío, la interfaz muestra un placeholder elegante con el texto alt." }
-              - { label: "Foto secundaria", name: "secondarySrc", widget: "image", required: false, hint: "Se muestra al pasar el mouse (hover). Opcional." }
-              - { label: "Texto alt", name: "label", widget: "string", required: false }
+              - label: "Fotos adicionales"
+                name: "gallery"
+                widget: "list"
+                required: false
+                collapsed: false
+                hint: "Más fotos de esta variante (aparecen en la ficha). Agregue una entrada por foto. La primera se usa como vista al pasar el mouse en las tarjetas."
+                fields:
+                  - { label: "Foto", name: "src", widget: "image", required: false }
+              - { label: "Texto alternativo (accesibilidad)", name: "label", widget: "string", required: false, hint: "Texto leído por lectores de pantalla y mostrado si la foto no carga. Ejemplo: Vestido Trinitaria — Marfil." }
       - label: "Imagen destacada"
         name: "featuredImage"
         widget: "object"
         collapsed: false
         required: false
-        hint: "Foto editorial de la pieza estrella (sección de novedades). Si no se define, se usa la foto principal de la primera variante."
+        show: { field: "isNew", value: true }
+        hint: "Foto editorial de la pieza estrella (sección de novedades). Se muestra solo cuando “Es novedad” está activo. Si no se define, se usa la foto principal de la primera variante."
         fields:
           - { label: "Foto principal", name: "src", widget: "image", required: false }
-          - { label: "Foto secundaria", name: "secondarySrc", widget: "image", required: false }
-          - { label: "Texto alt", name: "label", widget: "string", required: false }
-      - { label: "Tallas", name: "sizes", widget: "list", collapsed: false, hint: "Tallas disponibles (por ejemplo XS, S, M, L, XL). Los accesorios usan “Único”." }
+          - label: "Fotos adicionales"
+            name: "gallery"
+            widget: "list"
+            required: false
+            collapsed: false
+            hint: "Más fotos de esta variante (aparecen en la ficha). Agregue una entrada por foto. La primera se usa como vista al pasar el mouse en las tarjetas."
+            fields:
+              - { label: "Foto", name: "src", widget: "image", required: false }
+          - { label: "Texto alternativo (accesibilidad)", name: "label", widget: "string", required: false, hint: "Texto leído por lectores de pantalla y mostrado si la foto no carga. Ejemplo: Vestido Trinitaria — Marfil." }
+      - label: "Tallas"
+        name: "sizes"
+        widget: "select"
+        multiple: true
+        min: 1
+        options: ["XS", "S", "M", "L", "XL", "Único"]
+        hint: "Marque cada talla disponible. Para accesorios (talla única) marque solo “Único”."
       - { label: "Tela", name: "fabric", widget: "string", hint: "Tela principal; se muestra en los datos técnicos de la ficha." }
       - { label: "Cuidados", name: "care", widget: "text", hint: "Instrucciones de lavado y cuidado de la prenda." }
       - { label: "Texto editorial", name: "editorial", widget: "text", hint: "Voz de marca de la ficha: una o dos frases." }
       - { label: "Es novedad", name: "isNew", widget: "boolean", default: false, required: false, hint: "Al activarlo, la pieza aparece en la cinta de novedades de la portada." }
-      - { label: "Fecha de novedad", name: "addedAt", widget: "datetime", required: false, hint: "Ordena las novedades (más reciente primero)." }
+      - { label: "Fecha de novedad", name: "addedAt", widget: "datetime", required: false, show: { field: "isNew", value: true }, hint: "Se muestra solo cuando “Es novedad” está activo. Ordena la cinta de novedades (más reciente primero)." }
       - { label: "Badge opcional", name: "badge", widget: "string", required: false, hint: "Si queda vacío se muestra el badge estándar “Bajo pedido 3-5 días”. No usar badges de oferta." }
-      - { label: "Orden en el catálogo", name: "sortOrder", widget: "number", value_type: "int", min: 0, required: true, hint: "Orden de presentación en el catálogo (0, 1, 2…). No repetir entre productos." }
+      - { label: "Orden en el catálogo", name: "sortOrder", widget: "number", value_type: "int", min: 0, required: true, hint: "Orden de presentación en el catálogo “todo a la vista”: 0 aparece primero, 1 después, y así sucesivamente. No repetir entre productos. Ejemplo: el primer producto de la lista tiene 0." }
 
   # ------------------------------------------------------------------
   # Testimonios (un archivo único)
   # ------------------------------------------------------------------
   - name: "testimonios"
     label: "Testimonios"
+    editor:
+      preview: false
     files:
       - name: "lista-testimonios"
         label: "Testimonios de clientas"
@@ -116,6 +139,8 @@ collections:
   # ------------------------------------------------------------------
   - name: "disenadora"
     label: "Diseñadora"
+    editor:
+      preview: false
     files:
       - name: "perfil"
         label: "Perfil de la diseñadora"
@@ -138,6 +163,8 @@ collections:
   # ------------------------------------------------------------------
   - name: "contacto"
     label: "Contacto"
+    editor:
+      preview: false
     files:
       - name: "canales"
         label: "Canales de contacto"
@@ -159,6 +186,8 @@ collections:
   # ------------------------------------------------------------------
   - name: "categorias"
     label: "Categorías"
+    editor:
+      preview: false
     files:
       - name: "lista-categorias"
         label: "Categorías del catálogo"

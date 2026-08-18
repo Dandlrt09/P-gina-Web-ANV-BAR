@@ -9,7 +9,7 @@
       "hex": "#d97a63",
       "image": {
         "src": "/imagenes/set-resort-cayena.jpg",
-        "secondarySrc": "/imagenes/set-resort-cayena-v2.jpg",
+        "gallery": ["/imagenes/set-resort-cayena-v2.jpg"],
         "label": "Set Resort Cayena — Coral"
       }
     },

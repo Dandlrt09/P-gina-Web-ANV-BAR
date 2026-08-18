@@ -9,7 +9,7 @@
       "hex": "#f3f2ef",
       "image": {
         "src": "/imagenes/vestido-ceremonia-marfil.jpg",
-        "secondarySrc": "/imagenes/vestido-ceremonia-marfil-v2.jpg",
+        "gallery": ["/imagenes/vestido-ceremonia-marfil-v2.jpg"],
         "label": "Vestido Ceremonia Marfil — Marfil"
       }
     },

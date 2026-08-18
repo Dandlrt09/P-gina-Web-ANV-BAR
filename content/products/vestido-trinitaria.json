@@ -9,7 +9,7 @@
       "hex": "#f3f2ef",
       "image": {
         "src": "/imagenes/vestido-trinitaria.jpg",
-        "secondarySrc": "/imagenes/vestido-trinitaria-v2.jpg",
+        "gallery": ["/imagenes/vestido-trinitaria-v2.jpg"],
         "label": "Vestido Trinitaria — Marfil"
       }
     },

@@ -24,7 +24,7 @@ const FALLBACK_ASPECT = '4 / 5'
 
 /**
  * Galería de imágenes de producto: muestra las imágenes únicas del producto
- * (editorial + variantes con foto real, incluidas las secundarias V2).
+ * (editorial + variantes con foto real, incluidas las de `gallery`).
  *  - Modo 'arrows': navegación con flechas, contador y teclado.
  *  - Modo 'thumbnails': la principal domina y debajo una grilla de
  *    miniaturas; el área se adapta a la relación de la imagen cargada.
@@ -46,28 +46,30 @@ export function ProductGallery({
   const [aspectRatio, setAspectRatio] = useState<number | null>(null)
   const aspectRef = useRef<number | null>(null)
 
-  /** Imágenes únicas del producto (editorial + variantes con foto real,
-   *  incluidas las secundarias V2 para navegar con las flechas). */
+  /** Imágenes únicas del producto (editorial + variantes con foto real). Por
+   *  cada imagen se agregan su `src` y luego CADA entrada de su `gallery` como
+   *  foto independiente (sin duplicados dentro de la lista). */
   const images = useMemo<ProductImage[]>(() => {
     const seen = new Set<string>()
+    const list: ProductImage[] = []
     const push = (image: ProductImage | undefined) => {
-      if (image?.src && !seen.has(image.src)) {
+      if (!image) return
+      if (image.src && !seen.has(image.src)) {
         seen.add(image.src)
         list.push(image)
       }
+      for (const extra of image.gallery ?? []) {
+        if (extra && !seen.has(extra)) {
+          seen.add(extra)
+          list.push({ src: extra, label: image.label })
+        }
+      }
     }
-    const list: ProductImage[] = []
     if (product.featuredImage) {
       push(product.featuredImage)
-      if (product.featuredImage.secondarySrc) {
-        push({ src: product.featuredImage.secondarySrc, label: product.featuredImage.label })
-      }
     }
     for (const variant of product.colors) {
       push(variant.image)
-      if (variant.image?.secondarySrc) {
-        push({ src: variant.image.secondarySrc, label: variant.image.label })
-      }
     }
     return list
   }, [product])

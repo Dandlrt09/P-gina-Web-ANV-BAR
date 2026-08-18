@@ -9,7 +9,7 @@
       "hex": "#58232c",
       "image": {
         "src": "/imagenes/vestido-rubra-nocturno.jpg",
-        "secondarySrc": "/imagenes/vestido-rubra-nocturno-v2.jpg",
+        "gallery": ["/imagenes/vestido-rubra-nocturno-v2.jpg"],
         "label": "Vestido RUBRA Nocturno — Burdeo"
       }
     },
@@ -23,7 +23,7 @@
   ],
   "featuredImage": {
     "src": "/imagenes/featured-rubra-nocturno.jpg",
-    "secondarySrc": "/imagenes/featured-rubra-nocturno-v2.jpg",
+    "gallery": ["/imagenes/featured-rubra-nocturno-v2.jpg"],
     "label": "Vestido RUBRA Nocturno — Pieza estrella"
   },
   "sizes": ["S", "M", "L"],

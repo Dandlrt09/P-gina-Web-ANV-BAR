@@ -31,9 +31,10 @@
 export type ProductImage = {
   /** Ruta de la foto real (carpeta /public o URL). Vacío → placeholder elegante. */
   src?: string
-  /** Foto secundaria del mismo producto: se muestra al pasar el mouse y
-   *  se vuelve a la principal al quitarlo (hover). Opcional. */
-  secondarySrc?: string
+  /** Fotos adicionales de la misma variante (más allá de la principal). Cada
+   *  una es una ruta o URL. La primera se usa como vista hover en las tarjetas;
+   *  todas aparecen en la galería de la ficha. Opcional. */
+  gallery?: string[]
   /** Texto corto: se muestra en el placeholder tipográfico y sirve de alt. Ej: "Burdeo". */
   label: string
 }
@@ -205,15 +206,16 @@ function parseImage(where: string, raw: unknown, fallbackLabel: string): Product
   }
   const image = raw as Record<string, unknown>
   const src = typeof image.src === 'string' && image.src.trim() !== '' ? image.src : undefined
-  const secondarySrc =
-    typeof image.secondarySrc === 'string' && image.secondarySrc.trim() !== ''
-      ? image.secondarySrc
-      : undefined
+  const gallery = Array.isArray(image.gallery)
+    ? image.gallery
+        .map((item) => (typeof item === 'string' ? item.trim() : ''))
+        .filter((item) => item !== '')
+    : undefined
   const label =
     typeof image.label === 'string' && image.label.trim() !== '' ? image.label : fallbackLabel
   return {
     ...(typeof src === 'string' ? { src } : {}),
-    ...(typeof secondarySrc === 'string' ? { secondarySrc } : {}),
+    ...(Array.isArray(gallery) && gallery.length > 0 ? { gallery } : {}),
     label,
   }
 }
