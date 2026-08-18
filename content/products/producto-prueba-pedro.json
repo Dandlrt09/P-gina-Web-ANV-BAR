@@ -6,7 +6,11 @@
   "colors": [
     {
       "name": "Burdeo",
-      "hex": "#58232c"
+      "hex": "#58232c",
+      "image": {
+        "src": "/imagenes/tarjeta-6.png",
+        "secondarySrc": "/imagenes/tarjeta-6-v2.png"
+      }
     }
   ],
   "care": "Lavar a mano",
