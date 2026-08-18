@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react'
-import { PRODUCTS, type Product } from './data/catalog'
+import { PRODUCTS, compareCatalogOrder, type Product } from './data/catalog'
 import { Nav } from './components/Nav'
 import { Hero } from './components/Hero'
 import { TrustBar } from './components/TrustBar'
@@ -100,7 +100,7 @@ function Shop() {
       ? (PRODUCTS.find((item) => item.id === route.productId) ?? null)
       : null
 
-  const featured = PRODUCTS.filter((p) => p.isNew).sort((a, b) => a.id.localeCompare(b.id))
+  const featured = PRODUCTS.filter((p) => p.isNew).sort(compareCatalogOrder)
 
   return (
     <div className="flex min-h-screen flex-col bg-surface font-sans text-ink">

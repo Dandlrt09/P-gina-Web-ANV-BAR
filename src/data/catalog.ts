@@ -8,7 +8,7 @@
  *
  * CÓMO EDITAR EL SITIO SIN TOCAR CÓDIGO:
  *  - Productos: un archivo JSON por pieza en content/products/. El orden de
- *    presentación del catálogo lo define el identificador `id` (orden alfabético).
+ *    presentación del catálogo lo define el campo `sortOrder` (0, 1, 2...).
  *  - Testimonios: content/testimonials.json. Perfil de la diseñadora:
  *    content/designer.json. Categorías: content/categories.json (su orden es
  *    el de presentación del catálogo).
@@ -68,6 +68,9 @@ export type Product = {
   editorial: string
   /** Flag de novedad (lo marca Anays): la pieza aparece en la cinta de novedades. */
   isNew?: boolean
+  /** Orden de presentación en el catálogo (0 primero, 1 después...). Opcional:
+   *  si falta, se ordena después de los numerados; los empates por id. */
+  sortOrder?: number
 }
 
 export type Testimonial = {
@@ -286,6 +289,9 @@ function parseProductFile(file: string, rawContent: unknown): Product {
   if (product.isNew === true) {
     data.isNew = true
   }
+  if (typeof product.sortOrder === 'number' && Number.isFinite(product.sortOrder)) {
+    data.sortOrder = product.sortOrder
+  }
 
   return data
 }
@@ -298,13 +304,25 @@ if (productEntries.length === 0) {
 }
 
 /**
- * Productos del catálogo ordenados por identificador (`id`) de forma
- * determinística (el orden del glob JSON no está garantizado). Ese orden
- * define la presentación del catálogo y de la cinta de novedades.
+ * Compara dos productos por orden de presentación: primero por `sortOrder`
+ * (0, 1, 2...); los que no tienen `sortOrder` van después de los numerados;
+ * los empates se resuelven por `id`. Usado por el catálogo y la cinta de
+ * novedades para que ambos sigan el mismo orden.
+ */
+export function compareCatalogOrder(a: Product, b: Product): number {
+  const aOrder = a.sortOrder ?? Number.POSITIVE_INFINITY
+  const bOrder = b.sortOrder ?? Number.POSITIVE_INFINITY
+  return aOrder - bOrder || a.id.localeCompare(b.id)
+}
+
+/**
+ * Productos del catálogo en el orden de presentación definido por `sortOrder`
+ * (el orden del glob JSON no está garantizado). Ese orden define la
+ * presentación del catálogo, de la cinta de novedades y de la pieza destacada.
  */
 export const PRODUCTS: Product[] = productEntries
   .map(([file, rawContent]) => parseProductFile(file, rawContent))
-  .sort((a, b) => a.id.localeCompare(b.id))
+  .sort(compareCatalogOrder)
 
 /* ------------------------------------------------------------------ */
 /* Testimonios (content/testimonials.json)                             */
