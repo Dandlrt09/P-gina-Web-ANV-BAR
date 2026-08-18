@@ -14,7 +14,7 @@ const SCROLL_STEP = 0.8
 
 /**
  * Cinta horizontal de novedades: las piezas marcadas como nuevas por Anays
- * (flag `isNew`), ordenadas de la más reciente a la más antigua por `addedAt`.
+ * (flag `isNew`), en el orden determinístico del catálogo (identificador).
  * Se desplaza con flechas; en táctil también se desliza con el dedo.
  */
 export function FeaturedCarousel({ products, onQuickView, onOpenDetail }: FeaturedCarouselProps) {

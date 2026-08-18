@@ -35,7 +35,7 @@ collections:
     identifier_field: "id"
     slug: "{{fields.id}}"
     summary: "{{fields.name}} — ${{fields.priceCOP}}"
-    description: "Catálogo de ANV·BAR: una pieza por archivo. El orden de presentación lo define “Orden en el catálogo”."
+    description: "Catálogo de ANV·BAR: una pieza por archivo. El orden de presentación en la web lo define el identificador."
     editor:
       preview: false
     fields:
@@ -54,12 +54,23 @@ collections:
           - { label: "Sets", value: "Sets" }
           - { label: "Accesorios", value: "Accesorios" }
       - { label: "Precio (COP)", name: "priceCOP", widget: "number", value_type: "int", min: 0, hint: "Precio en pesos colombianos, sin decimales. Ejemplo: 250000 se muestra como $250.000." }
+      - { label: "Es novedad", name: "isNew", widget: "boolean", default: false, required: false, hint: "Al activarlo, la pieza aparece en la cinta de novedades de la portada y en el catálogo." }
+      - { label: "Texto editorial", name: "editorial", widget: "text", hint: "Voz de marca de la ficha: una o dos frases." }
+      - { label: "Tela", name: "fabric", widget: "string", hint: "Tela principal; se muestra en los datos técnicos de la ficha." }
+      - { label: "Cuidados", name: "care", widget: "text", hint: "Instrucciones de lavado y cuidado de la prenda." }
+      - label: "Tallas"
+        name: "sizes"
+        widget: "select"
+        multiple: true
+        min: 1
+        options: ["XS", "S", "M", "L", "XL", "Único"]
+        hint: "Marque cada talla disponible. Para accesorios (talla única) marque solo “Único”."
       - label: "Colores"
         name: "colors"
         widget: "list"
         collapsed: false
         summary: "{{fields.name}}"
-        hint: "Variantes de color reales de la pieza. Agregue una por color, con su código y (si existe) su foto."
+        hint: "Variantes de color reales de la pieza, cada una con su foto."
         fields:
           - { label: "Nombre", name: "name", widget: "string" }
           - { label: "Código hex", name: "hex", widget: "string", hint: "Color real de la pieza, en formato #rrggbb. Ejemplo: #58232c." }
@@ -79,38 +90,6 @@ collections:
                 fields:
                   - { label: "Foto", name: "src", widget: "image", required: false }
               - { label: "Texto alternativo (accesibilidad)", name: "label", widget: "string", required: false, hint: "Texto leído por lectores de pantalla y mostrado si la foto no carga. Ejemplo: Vestido Trinitaria — Marfil." }
-      - label: "Imagen destacada"
-        name: "featuredImage"
-        widget: "object"
-        collapsed: false
-        required: false
-        show: { field: "isNew", value: true }
-        hint: "Foto editorial de la pieza estrella (sección de novedades). Se muestra solo cuando “Es novedad” está activo. Si no se define, se usa la foto principal de la primera variante."
-        fields:
-          - { label: "Foto principal", name: "src", widget: "image", required: false }
-          - label: "Fotos adicionales"
-            name: "gallery"
-            widget: "list"
-            required: false
-            collapsed: false
-            hint: "Más fotos de esta variante (aparecen en la ficha). Agregue una entrada por foto. La primera se usa como vista al pasar el mouse en las tarjetas."
-            fields:
-              - { label: "Foto", name: "src", widget: "image", required: false }
-          - { label: "Texto alternativo (accesibilidad)", name: "label", widget: "string", required: false, hint: "Texto leído por lectores de pantalla y mostrado si la foto no carga. Ejemplo: Vestido Trinitaria — Marfil." }
-      - label: "Tallas"
-        name: "sizes"
-        widget: "select"
-        multiple: true
-        min: 1
-        options: ["XS", "S", "M", "L", "XL", "Único"]
-        hint: "Marque cada talla disponible. Para accesorios (talla única) marque solo “Único”."
-      - { label: "Tela", name: "fabric", widget: "string", hint: "Tela principal; se muestra en los datos técnicos de la ficha." }
-      - { label: "Cuidados", name: "care", widget: "text", hint: "Instrucciones de lavado y cuidado de la prenda." }
-      - { label: "Texto editorial", name: "editorial", widget: "text", hint: "Voz de marca de la ficha: una o dos frases." }
-      - { label: "Es novedad", name: "isNew", widget: "boolean", default: false, required: false, hint: "Al activarlo, la pieza aparece en la cinta de novedades de la portada." }
-      - { label: "Fecha de novedad", name: "addedAt", widget: "datetime", required: false, show: { field: "isNew", value: true }, hint: "Se muestra solo cuando “Es novedad” está activo. Ordena la cinta de novedades (más reciente primero)." }
-      - { label: "Badge opcional", name: "badge", widget: "string", required: false, hint: "Si queda vacío se muestra el badge estándar “Bajo pedido 3-5 días”. No usar badges de oferta." }
-      - { label: "Orden en el catálogo", name: "sortOrder", widget: "number", value_type: "int", min: 0, required: true, hint: "Orden de presentación en el catálogo “todo a la vista”: 0 aparece primero, 1 después, y así sucesivamente. No repetir entre productos. Ejemplo: el primer producto de la lista tiene 0." }
 
   # ------------------------------------------------------------------
   # Testimonios (un archivo único)

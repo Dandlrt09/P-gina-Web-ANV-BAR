@@ -72,7 +72,7 @@ export function ProductDetail({ product, onBackToCatalog }: ProductDetailProps) 
                 </span>
               )}
               <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-medium text-brand-primary">
-                {product.badge ?? ORDER_BADGE}
+                {ORDER_BADGE}
               </span>
             </div>
 

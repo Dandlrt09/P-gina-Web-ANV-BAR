@@ -100,9 +100,7 @@ function Shop() {
       ? (PRODUCTS.find((item) => item.id === route.productId) ?? null)
       : null
 
-  const featured = PRODUCTS.filter((p) => p.isNew).sort((a, b) =>
-    (b.addedAt ?? '').localeCompare(a.addedAt ?? ''),
-  )
+  const featured = PRODUCTS.filter((p) => p.isNew).sort((a, b) => a.id.localeCompare(b.id))
 
   return (
     <div className="flex min-h-screen flex-col bg-surface font-sans text-ink">

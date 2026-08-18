@@ -23,8 +23,8 @@ type ProductGalleryProps = {
 const FALLBACK_ASPECT = '4 / 5'
 
 /**
- * Galería de imágenes de producto: muestra las imágenes únicas del producto
- * (editorial + variantes con foto real, incluidas las de `gallery`).
+ * Galería de imágenes de producto: muestra las fotos de las variantes de
+ * color con foto real (incluidas las de `gallery`).
  *  - Modo 'arrows': navegación con flechas, contador y teclado.
  *  - Modo 'thumbnails': la principal domina y debajo una grilla de
  *    miniaturas; el área se adapta a la relación de la imagen cargada.
@@ -46,7 +46,7 @@ export function ProductGallery({
   const [aspectRatio, setAspectRatio] = useState<number | null>(null)
   const aspectRef = useRef<number | null>(null)
 
-  /** Imágenes únicas del producto (editorial + variantes con foto real). Por
+  /** Imágenes únicas del producto (las variantes de color con foto real). Por
    *  cada imagen se agregan su `src` y luego CADA entrada de su `gallery` como
    *  foto independiente (sin duplicados dentro de la lista). */
   const images = useMemo<ProductImage[]>(() => {
@@ -64,9 +64,6 @@ export function ProductGallery({
           list.push({ src: extra, label: image.label })
         }
       }
-    }
-    if (product.featuredImage) {
-      push(product.featuredImage)
     }
     for (const variant of product.colors) {
       push(variant.image)

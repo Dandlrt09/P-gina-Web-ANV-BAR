@@ -67,7 +67,7 @@ export function FeaturedPiece({ products, onQuickView }: FeaturedPieceProps) {
 
   const product = products[index]
   const primary = product.colors[0]
-  const img = product.featuredImage ?? primary?.image
+  const img = primary?.image
   const alt = img?.label ?? product.name
 
   return (

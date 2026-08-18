@@ -38,7 +38,7 @@ export function ProductCard({ product, onQuickView, onOpenDetail }: ProductCardP
           className="aspect-[4/5] w-full"
         />
         <span className="absolute left-3 top-3 rounded-full bg-brand-deep/90 px-3 py-1 text-xs font-medium text-surface">
-          {product.badge ?? ORDER_BADGE}
+          {ORDER_BADGE}
         </span>
         <button
           type="button"

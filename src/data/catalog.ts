@@ -8,7 +8,7 @@
  *
  * CÓMO EDITAR EL SITIO SIN TOCAR CÓDIGO:
  *  - Productos: un archivo JSON por pieza en content/products/. El orden de
- *    presentación del catálogo lo controla el campo `sortOrder` (0, 1, 2…).
+ *    presentación del catálogo lo define el identificador `id` (orden alfabético).
  *  - Testimonios: content/testimonials.json. Perfil de la diseñadora:
  *    content/designer.json. Categorías: content/categories.json (su orden es
  *    el de presentación del catálogo).
@@ -19,9 +19,8 @@
  * Convenciones del tipo Product:
  *  - priceCOP SIEMPRE en pesos enteros sin decimales (250000 → "$250.000").
  *  - colors contiene variantes de color REALES (nombre + hex exacto).
- *  - No hay ofertas ni descuentos: site MUST NOT mostrar badges de SALE.
- *    Si un producto necesita un badge distinto al estándar "Bajo pedido 3-5 días",
- *    usa el campo opcional `badge`.
+ *  - No hay ofertas ni descuentos: el sitio nunca muestra badges de SALE; el
+ *    badge estándar es "Bajo pedido 3-5 días".
  */
 
 /* ------------------------------------------------------------------ */
@@ -59,9 +58,6 @@ export type Product = {
   priceCOP: number
   /** Variantes de color reales del producto. */
   colors: ProductColor[]
-  /** Imagen editorial de la "pieza estrella" (sección grande de novedades).
-   *  Si falta, esa sección usa la foto principal de la primera variante. */
-  featuredImage?: ProductImage
   /** Tallas disponibles (ej. ["XS","S","M","L","XL"] o ["Único"] para accesorios). */
   sizes: string[]
   /** Tela principal; se muestra en los datos técnicos de la ficha. */
@@ -72,11 +68,6 @@ export type Product = {
   editorial: string
   /** Flag de novedad (lo marca Anays): la pieza aparece en la cinta de novedades. */
   isNew?: boolean
-  /** Fecha ISO YYYY-MM-DD para ordenar la cinta de novedades (más reciente primero). */
-  addedAt?: string
-  /** Badge opcional. Si falta, la interfaz muestra el badge estándar de la marca:
-   *  "Bajo pedido 3-5 días". No usar badges de oferta. */
-  badge?: string
 }
 
 export type Testimonial = {
@@ -237,7 +228,7 @@ function parseColor(file: string, raw: unknown, index: number): ProductColor {
   return parsed
 }
 
-function parseProductFile(file: string, rawContent: unknown): { order: number; data: Product } {
+function parseProductFile(file: string, rawContent: unknown): Product {
   if (typeof rawContent !== 'object' || rawContent === null || Array.isArray(rawContent)) {
     throw new Error(`[catalog] "${file}": el contenido debe ser un objeto JSON con un producto.`)
   }
@@ -265,22 +256,20 @@ function parseProductFile(file: string, rawContent: unknown): { order: number; d
   }
   const colors = rawColors.map((color, index) => parseColor(file, color, index))
 
-  const rawSizes = product.sizes
-  if (!Array.isArray(rawSizes)) {
-    throw new Error(`[catalog] "${file}": sizes debe ser una lista de tallas.`)
-  }
-  const sizes = rawSizes
-    .map((size) => (typeof size === 'string' ? size.trim() : ''))
-    .filter((size) => size !== '')
-  if (sizes.length === 0) {
-    throw new Error(`[catalog] "${file}": sizes no puede quedar vacío.`)
-  }
-
-  const order = product.sortOrder
-  if (typeof order !== 'number' || !Number.isFinite(order)) {
-    throw new Error(
-      `[catalog] "${file}": sortOrder es obligatorio y debe ser un número (orden de presentación).`,
-    )
+  let sizes: string[]
+  if (category === 'Accesorios') {
+    sizes = ['Único']
+  } else {
+    const rawSizes = product.sizes
+    if (!Array.isArray(rawSizes)) {
+      throw new Error(`[catalog] "${file}": sizes debe ser una lista de tallas.`)
+    }
+    sizes = rawSizes
+      .map((size) => (typeof size === 'string' ? size.trim() : ''))
+      .filter((size) => size !== '')
+    if (sizes.length === 0) {
+      throw new Error(`[catalog] "${file}": sizes no puede quedar vacío.`)
+    }
   }
 
   const data: Product = {
@@ -294,20 +283,11 @@ function parseProductFile(file: string, rawContent: unknown): { order: number; d
     care: requiredString(product, 'care', file),
     editorial: requiredString(product, 'editorial', file),
   }
-  if (product.featuredImage != null) {
-    data.featuredImage = parseImage(`"${file}" (featuredImage)`, product.featuredImage, name)
-  }
   if (product.isNew === true) {
     data.isNew = true
   }
-  if (typeof product.addedAt === 'string' && product.addedAt !== '') {
-    data.addedAt = product.addedAt
-  }
-  if (typeof product.badge === 'string' && product.badge !== '') {
-    data.badge = product.badge
-  }
 
-  return { order, data }
+  return data
 }
 
 const productEntries = Object.entries(
@@ -318,14 +298,13 @@ if (productEntries.length === 0) {
 }
 
 /**
- * Productos del catálogo en el orden de presentación definido por `sortOrder`
- * en cada archivo (el orden del glob JSON no está garantizado). El campo
- * `sortOrder` se consume aquí y NO se expone en el tipo Product.
+ * Productos del catálogo ordenados por identificador (`id`) de forma
+ * determinística (el orden del glob JSON no está garantizado). Ese orden
+ * define la presentación del catálogo y de la cinta de novedades.
  */
 export const PRODUCTS: Product[] = productEntries
   .map(([file, rawContent]) => parseProductFile(file, rawContent))
-  .sort((a, b) => a.order - b.order)
-  .map(({ data }) => data)
+  .sort((a, b) => a.id.localeCompare(b.id))
 
 /* ------------------------------------------------------------------ */
 /* Testimonios (content/testimonials.json)                             */
