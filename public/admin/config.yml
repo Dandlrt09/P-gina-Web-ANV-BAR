@@ -55,7 +55,7 @@ collections:
           - { label: "Accesorios", value: "Accesorios" }
       - { label: "Precio (COP)", name: "priceCOP", widget: "number", value_type: "int", min: 0, hint: "Precio en pesos colombianos, sin decimales. Ejemplo: 250000 se muestra como $250.000." }
       - { label: "Es novedad", name: "isNew", widget: "boolean", default: false, required: false, hint: "Al activarlo, la pieza aparece en la cinta de novedades de la portada y en el catálogo." }
-      - { label: "Orden en el catálogo", name: "sortOrder", widget: "number", value_type: "int", min: 0, required: false, hint: "Orden de presentación en el catálogo: 0 aparece primero, 1 después, y así sucesivamente. Si queda vacío, la pieza aparece al final (después de las numeradas). Evite repetir números entre productos." }
+      - { label: "Orden en el catálogo", name: "sortOrder", widget: "number", value_type: "int", min: 0, required: false, hint: "Ordene dentro de su categoría: 0 primero, 1 después, etc. Puede empezar de 0 en cada sección, pero no repita números entre productos de la misma categoría. Si lo deja vacío, la pieza aparece al final de su sección." }
       - { label: "Texto editorial", name: "editorial", widget: "text", hint: "Voz de marca de la ficha: una o dos frases." }
       - { label: "Tela", name: "fabric", widget: "string", hint: "Tela principal; se muestra en los datos técnicos de la ficha." }
       - { label: "Cuidados", name: "care", widget: "text", hint: "Instrucciones de lavado y cuidado de la prenda." }
