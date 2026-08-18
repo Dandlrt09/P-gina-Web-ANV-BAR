@@ -202,7 +202,16 @@ function parseImage(where: string, raw: unknown, fallbackLabel: string): Product
   const src = typeof image.src === 'string' && image.src.trim() !== '' ? image.src : undefined
   const gallery = Array.isArray(image.gallery)
     ? image.gallery
-        .map((item) => (typeof item === 'string' ? item.trim() : ''))
+        .map((item) => {
+          // Decap guarda cada entrada como string ("/imagenes/x.jpg") o como
+          // objeto { src: "/imagenes/x.jpg" }: aceptamos ambos formatos.
+          if (typeof item === 'string') return item.trim()
+          if (typeof item === 'object' && item !== null) {
+            const src = (item as Record<string, unknown>).src
+            return typeof src === 'string' ? src.trim() : ''
+          }
+          return ''
+        })
         .filter((item) => item !== '')
     : undefined
   const label =
