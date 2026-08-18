@@ -1,0 +1,40 @@
+{
+  "fabric": "No se",
+  "editorial": "Prueba de falda",
+  "name": "Faldita",
+  "colors": [
+    {
+      "name": "Rojo",
+      "hex": "#FF0000",
+      "image": {
+        "src": "/imagenes/tarjeta-6.png",
+        "gallery": [
+          {
+            "src": "/imagenes/tarjeta-6-v2.png"
+          },
+          {
+            "src": "/imagenes/set-resort-cayena-v2.jpg"
+          }
+        ],
+        "label": "Error XD"
+      }
+    },
+    {
+      "name": "Amarillo",
+      "hex": "#FFFF00",
+      "image": {
+        "src": "/imagenes/falda-plisada-contraluz.jpg",
+        "label": "Error al cuadrado"
+      }
+    }
+  ],
+  "care": "Rompelo",
+  "sizes": [
+    "S",
+    "M"
+  ],
+  "isNew": false,
+  "id": "Falta-prueba",
+  "priceCOP": 100000,
+  "category": "Faldas"
+}
