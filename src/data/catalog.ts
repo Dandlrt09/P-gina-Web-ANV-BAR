@@ -1,20 +1,13 @@
 /**
- * ANV·BAR — Catálogo (contenido proveniente de archivos editables).
+ * ANV·BAR — Catálogo (productos desde Supabase, resto desde archivos locales).
  *
- * Los datos (productos, testimonios, perfil de la diseñadora y categorías) se
- * cargan en tiempo de build desde el directorio `content/` del proyecto. El
- * equipo edita esos archivos desde el admin (Decap CMS) sin tocar código; el
- * bundle los empaqueta y la interfaz los consume exactamente igual que antes.
- *
- * CÓMO EDITAR EL SITIO SIN TOCAR CÓDIGO:
- *  - Productos: un archivo JSON por pieza en content/products/. El orden de
- *    presentación del catálogo lo define el campo `sortOrder` (0, 1, 2...).
- *  - Testimonios: content/testimonials.json. Perfil de la diseñadora:
- *    content/designer.json. Categorías: content/categories.json (su orden es
- *    el de presentación del catálogo).
- *  - Reemplaza una foto: asigna `src` en la variante de color (ruta dentro de
- *    /public o URL externa). Mientras `src` quede vacío, la interfaz muestra un
- *    placeholder tipográfico elegante con `label`.
+ * Los productos y su orden de presentación se cargan UNA vez al iniciar la
+ * aplicación: el CatalogProvider (src/lib/CatalogContext.tsx) hace el fetch y
+ * rellena el singleton `PRODUCTS` de este módulo ANTES de que el gate de
+ * render lo deje pasar. La interfaz consume `PRODUCTS`/`CATEGORIES` exactamente
+ * como antes — este módulo es hoy solo la capa de mapeo (tipos 1:1 con la
+ * respuesta de Supabase) junto con testimonios y perfil de la diseñadora, que
+ * siguen cargándose en build desde `content/` (Decap CMS).
  *
  * Convenciones del tipo Product:
  *  - priceCOP SIEMPRE en pesos enteros sin decimales (250000 → "$250.000").
@@ -101,7 +94,105 @@ export type DesignerProfile = {
 }
 
 /* ------------------------------------------------------------------ */
-/* Carga de contenido (archivos JSON en content/)                      */
+/* Categorías del catálogo (orden de presentación "todo a la vista")   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Tupla estática con las 7 categorías vigentes en su orden de presentación
+ * (contrato de la interfaz). La semilla de Supabase valida la base contra esta
+ * tupla y falla si difieren (fail-loud): el sitio ya no deriva categorías de
+ * content/categories.json.
+ */
+export const CATEGORIES = [
+  'Vestidos',
+  'Conjuntos',
+  'Camisas',
+  'Faldas',
+  'Pantalones',
+  'Sets',
+  'Accesorios',
+] as const
+
+export type ProductCategory = (typeof CATEGORIES)[number]
+
+/* ------------------------------------------------------------------ */
+/* Productos (provenientes de Supabase)                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Fila cruda de la tabla `products` (1:1 con el payload de Supabase, nombres
+ * snake_case). `categories(sort_order)` se agrega en el fetch del provider
+ * como embed futuro; no forma parte del tipo de producto de la interfaz.
+ * `fabric`/`care`/`editorial` son columnas nullable; la semilla valida que
+ * sean texto no vacío, así que el `?? ''` del mapeo es inalcanzable con datos
+ * correctos.
+ */
+export type ProductRow = {
+  id: string
+  name: string
+  category: string
+  price_cop: number
+  sizes: string[]
+  fabric: string | null
+  care: string | null
+  editorial: string | null
+  is_new: boolean
+  sort_order: number | null
+  colors: ProductColor[]
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Fila cruda de la proyección `select('name,sort_order')` de la tabla
+ * `categories` (orden de presentación; `id` no se consulta).
+ */
+export type CategoryRow = {
+  name: string
+  sort_order: number
+}
+
+/** Mapea una fila de `products` a `Product` (snake_case → camelCase). */
+export function mapProductRow(row: ProductRow): Product {
+  return {
+    id: row.id,
+    name: row.name,
+    // La FK de la base apunta a categories.name y la semilla valida la tupla:
+    // el cast es seguro y reproduce el parser retirado.
+    category: row.category as ProductCategory,
+    priceCOP: row.price_cop,
+    colors: row.colors,
+    sizes: row.sizes,
+    fabric: row.fabric ?? '',
+    care: row.care ?? '',
+    editorial: row.editorial ?? '',
+    // Solo `true` explicito marca novedad / solo valor numerado define orden,
+    // igual que el parser retirado (ausencia ≠ false).
+    ...(row.is_new === true ? { isNew: true } : {}),
+    ...(row.sort_order != null ? { sortOrder: row.sort_order } : {}),
+  }
+}
+
+/** Mapea una fila de `categories` a su nombre de presentación. */
+export function mapCategoryRow(row: CategoryRow): ProductCategory {
+  return row.name as ProductCategory
+}
+
+/**
+ * Productos del catálogo en el orden de presentación (sort_order ASC NULLS
+ * LAST, luego id) tal como los devuelve Supabase. Singleton de módulo: se llena
+ * una sola vez por carga de página (CatalogProvider) y jamás se renderiza
+ * vacío gracias al gate de la App.
+ */
+export let PRODUCTS: Product[] = []
+
+/** Rellena el singleton `PRODUCTS` (lo invoca exclusivamente CatalogProvider). */
+export function setCatalogProducts(products: Product[]): void {
+  PRODUCTS = products
+}
+
+/* ------------------------------------------------------------------ */
+/* Testimonios (content/testimonials.json)                             */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -134,208 +225,6 @@ function listFromJson(raw: unknown, key: string, label: string): unknown[] {
   }
   return list
 }
-
-const categories: string[] = listFromJson(
-  singleContentFile(
-    Object.entries(
-      import.meta.glob('../../content/categories.json', { eager: true, import: 'default' }),
-    ),
-    'content/categories.json',
-  ),
-  'categories',
-  'content/categories.json',
-).map((category, index) => {
-  if (typeof category !== 'string' || category.trim() === '') {
-    throw new Error(
-      `[catalog] La categoría #${index + 1} de content/categories.json debe ser texto no vacío.`,
-    )
-  }
-  return category.trim()
-})
-
-const seenCategories = new Set<string>()
-for (const category of categories) {
-  if (seenCategories.has(category)) {
-    throw new Error(`[catalog] content/categories.json repite la categoría "${category}".`)
-  }
-  seenCategories.add(category)
-}
-
-/* ------------------------------------------------------------------ */
-/* Categorías del catálogo (orden de presentación "todo a la vista")   */
-/* ------------------------------------------------------------------ */
-
-/**
- * Lista de categorías con su orden de presentación. En runtime proviene de
- * content/categories.json (editable desde el admin); el tipo se mantiene como
- * tupla readonly de las 7 categorías vigentes (contrato de la interfaz).
- */
-export const CATEGORIES = categories as unknown as readonly [
-  'Vestidos',
-  'Conjuntos',
-  'Camisas',
-  'Faldas',
-  'Pantalones',
-  'Sets',
-  'Accesorios',
-]
-
-export type ProductCategory = (typeof CATEGORIES)[number]
-
-/* ------------------------------------------------------------------ */
-/* Productos (un archivo JSON por pieza en content/products/)          */
-/* ------------------------------------------------------------------ */
-
-function requiredString(product: Record<string, unknown>, key: string, file: string): string {
-  const value = product[key]
-  if (typeof value !== 'string' || value.trim() === '') {
-    throw new Error(`[catalog] "${file}": el campo "${key}" es obligatorio y debe ser texto no vacío.`)
-  }
-  return value
-}
-
-function parseImage(where: string, raw: unknown, fallbackLabel: string): ProductImage {
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-    throw new Error(`[catalog] ${where} espera un objeto de imagen.`)
-  }
-  const image = raw as Record<string, unknown>
-  const src = typeof image.src === 'string' && image.src.trim() !== '' ? image.src : undefined
-  const gallery = Array.isArray(image.gallery)
-    ? image.gallery
-        .map((item) => {
-          // Decap guarda cada entrada como string ("/imagenes/x.jpg") o como
-          // objeto { src: "/imagenes/x.jpg" }: aceptamos ambos formatos.
-          if (typeof item === 'string') return item.trim()
-          if (typeof item === 'object' && item !== null) {
-            const src = (item as Record<string, unknown>).src
-            return typeof src === 'string' ? src.trim() : ''
-          }
-          return ''
-        })
-        .filter((item) => item !== '')
-    : undefined
-  const label =
-    typeof image.label === 'string' && image.label.trim() !== '' ? image.label : fallbackLabel
-  return {
-    ...(typeof src === 'string' ? { src } : {}),
-    ...(Array.isArray(gallery) && gallery.length > 0 ? { gallery } : {}),
-    label,
-  }
-}
-
-function parseColor(file: string, raw: unknown, index: number): ProductColor {
-  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
-    throw new Error(`[catalog] "${file}": la variante de color #${index + 1} debe ser un objeto.`)
-  }
-  const color = raw as Record<string, unknown>
-  const name = typeof color.name === 'string' ? color.name : ''
-  const hex = typeof color.hex === 'string' ? color.hex : ''
-  if (name.trim() === '' || hex.trim() === '') {
-    throw new Error(`[catalog] "${file}": cada variante de color necesita "name" y "hex" no vacíos.`)
-  }
-  const parsed: ProductColor = { name, hex }
-  if (color.image != null) {
-    parsed.image = parseImage(`"${file}" (color "${name}")`, color.image, name)
-  }
-  return parsed
-}
-
-function parseProductFile(file: string, rawContent: unknown): Product {
-  if (typeof rawContent !== 'object' || rawContent === null || Array.isArray(rawContent)) {
-    throw new Error(`[catalog] "${file}": el contenido debe ser un objeto JSON con un producto.`)
-  }
-  const product = rawContent as Record<string, unknown>
-
-  const id = requiredString(product, 'id', file)
-  const name = requiredString(product, 'name', file)
-  const category = requiredString(product, 'category', file)
-  if (!categories.includes(category)) {
-    throw new Error(
-      `[catalog] "${file}": la categoría "${category}" no figura en content/categories.json.`,
-    )
-  }
-
-  const priceCOP = product.priceCOP
-  if (typeof priceCOP !== 'number' || !Number.isInteger(priceCOP) || priceCOP < 0) {
-    throw new Error(
-      `[catalog] "${file}": priceCOP debe ser un número entero en pesos colombianos, sin decimales.`,
-    )
-  }
-
-  const rawColors = product.colors
-  if (!Array.isArray(rawColors) || rawColors.length === 0) {
-    throw new Error(`[catalog] "${file}": colors debe ser una lista no vacía de variantes de color.`)
-  }
-  const colors = rawColors.map((color, index) => parseColor(file, color, index))
-
-  let sizes: string[]
-  if (category === 'Accesorios') {
-    sizes = ['Único']
-  } else {
-    const rawSizes = product.sizes
-    if (!Array.isArray(rawSizes)) {
-      throw new Error(`[catalog] "${file}": sizes debe ser una lista de tallas.`)
-    }
-    sizes = rawSizes
-      .map((size) => (typeof size === 'string' ? size.trim() : ''))
-      .filter((size) => size !== '')
-    if (sizes.length === 0) {
-      throw new Error(`[catalog] "${file}": sizes no puede quedar vacío.`)
-    }
-  }
-
-  const data: Product = {
-    id,
-    name,
-    category: category as ProductCategory,
-    priceCOP,
-    colors,
-    sizes,
-    fabric: requiredString(product, 'fabric', file),
-    care: requiredString(product, 'care', file),
-    editorial: requiredString(product, 'editorial', file),
-  }
-  if (product.isNew === true) {
-    data.isNew = true
-  }
-  if (typeof product.sortOrder === 'number' && Number.isFinite(product.sortOrder)) {
-    data.sortOrder = product.sortOrder
-  }
-
-  return data
-}
-
-const productEntries = Object.entries(
-  import.meta.glob('../../content/products/*.json', { eager: true, import: 'default' }),
-)
-if (productEntries.length === 0) {
-  throw new Error('[catalog] No hay archivos en content/products/. Cada producto requiere su archivo JSON.')
-}
-
-/**
- * Compara dos productos por orden de presentación: primero por `sortOrder`
- * (0, 1, 2...); los que no tienen `sortOrder` van después de los numerados;
- * los empates se resuelven por `id`. Usado por el catálogo y la cinta de
- * novedades para que ambos sigan el mismo orden.
- */
-export function compareCatalogOrder(a: Product, b: Product): number {
-  const aOrder = a.sortOrder ?? Number.POSITIVE_INFINITY
-  const bOrder = b.sortOrder ?? Number.POSITIVE_INFINITY
-  return aOrder - bOrder || a.id.localeCompare(b.id)
-}
-
-/**
- * Productos del catálogo en el orden de presentación definido por `sortOrder`
- * (el orden del glob JSON no está garantizado). Ese orden define la
- * presentación del catálogo, de la cinta de novedades y de la pieza destacada.
- */
-export const PRODUCTS: Product[] = productEntries
-  .map(([file, rawContent]) => parseProductFile(file, rawContent))
-  .sort(compareCatalogOrder)
-
-/* ------------------------------------------------------------------ */
-/* Testimonios (content/testimonials.json)                             */
-/* ------------------------------------------------------------------ */
 
 const testimonialsEntries = listFromJson(
   singleContentFile(
@@ -373,6 +262,14 @@ export const TESTIMONIALS: Testimonial[] = parsedTestimonials
 /* Perfil de la diseñadora (content/designer.json)                     */
 /* ------------------------------------------------------------------ */
 
+function requiredString(product: Record<string, unknown>, key: string, file: string): string {
+  const value = product[key]
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error(`[catalog] "${file}": el campo "${key}" es obligatorio y debe ser texto no vacío.`)
+  }
+  return value
+}
+
 const designerRaw = singleContentFile(
   Object.entries(import.meta.glob('../../content/designer.json', { eager: true, import: 'default' })),
   'content/designer.json',
@@ -400,6 +297,19 @@ export const DESIGNER: DesignerProfile = {
 /* ------------------------------------------------------------------ */
 /* Utilidad de formato (usada por la interfaz de catálogo)             */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Compara dos productos por orden de presentación: primero por `sortOrder`
+ * (0, 1, 2...); los que no tienen `sortOrder` van después de los numerados;
+ * los empates se resuelven por `id`. Espeja el `ORDER BY sort_order NULLS
+ * LAST, id` del fetch de Supabase; se mantiene para la cinta de novedades
+ * (filtra una sub-lista y la reordena con el mismo criterio).
+ */
+export function compareCatalogOrder(a: Product, b: Product): number {
+  const aOrder = a.sortOrder ?? Number.POSITIVE_INFINITY
+  const bOrder = b.sortOrder ?? Number.POSITIVE_INFINITY
+  return aOrder - bOrder || a.id.localeCompare(b.id)
+}
 
 /**
  * Formatea un precio COP a "$250.000" (sin decimales).
