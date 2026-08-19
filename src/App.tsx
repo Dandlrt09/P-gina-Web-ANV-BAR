@@ -16,7 +16,10 @@ import { Contact } from './components/Contact'
 import { Footer } from './components/Footer'
 import { ChatWidget } from './components/ChatWidget'
 import { LikesProvider } from './lib/LikesContext'
+import { CatalogProvider } from './lib/CatalogContext'
+import { useCatalog } from './lib/catalog-context'
 import { useLikes } from './lib/likes'
+import { CatalogError, CatalogLoading } from './components/CatalogGate'
 import { Reveal } from './lib/Reveal'
 
 type View = 'home' | 'favorites' | 'product'
@@ -49,6 +52,7 @@ function Shop() {
   const [route, setRoute] = useState<Route>(routeFromHash)
   const [quickView, setQuickView] = useState<Product | null>(null)
   const { likes } = useLikes()
+  const { status, retry } = useCatalog()
 
   // Back/forward del navegador: el hash cambia → sincronizamos la vista.
   useEffect(() => {
@@ -66,6 +70,13 @@ function Shop() {
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
+
+  // Gate del catálogo: mientras la carga no termina NO resolvemos rutas.
+  // La pantalla de carga (o de error) reemplaza TODO el contenido, así el
+  // grid y los vacíos "El catálogo se está vistiendo"/"Próximamente" jamás
+  // parpadean, y #/producto/<id desconocido> no cae a la home en silencio.
+  if (status === 'loading') return <CatalogLoading />
+  if (status === 'error') return <CatalogError onRetry={retry} />
 
   // Abre la ficha completa: navegación real por hash (#/producto/<id>).
   const openDetail = (product: Product) => {
@@ -158,7 +169,9 @@ function Shop() {
 function App() {
   return (
     <LikesProvider>
-      <Shop />
+      <CatalogProvider>
+        <Shop />
+      </CatalogProvider>
     </LikesProvider>
   )
 }
