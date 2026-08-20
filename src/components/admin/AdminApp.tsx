@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../lib/auth'
 import { AdminLogin } from './AdminLogin'
+import { ProductList } from './ProductList'
+import { ProductForm } from './ProductForm'
 
 /**
  * Rutas internas del admin (hash-based, mismas convenciones que la tienda).
@@ -126,25 +128,6 @@ function AdminDashboard() {
   )
 }
 
-/**
- * Placeholder de las rutas de productos (listado / alta / edición). Se reemplaza
- * en la siguiente unidad de trabajo con ProductList y ProductForm.
- */
-function ProductPlaceholder() {
-  return (
-    <section className="py-10 sm:py-14">
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-        <h1 className="font-display text-2xl font-medium text-brand-deep sm:text-3xl">
-          Gestión de productos
-        </h1>
-        <p className="mt-3 rounded-xl border border-brand-primary/15 bg-white/60 p-6 text-sm text-ink/80">
-          Este módulo se completa en la próxima unidad de trabajo.
-        </p>
-      </div>
-    </section>
-  )
-}
-
 function AdminPanel() {
   const { email, signOut } = useAuth()
   const [route, setRoute] = useState<AdminRoute>(routeFromAdminHash)
@@ -196,7 +179,15 @@ function AdminPanel() {
         </nav>
       </header>
       <main className="flex-1">
-        {route.view === 'dashboard' ? <AdminDashboard /> : <ProductPlaceholder />}
+        {route.view === 'productos' ? (
+          <ProductList />
+        ) : route.view === 'nuevo' ? (
+          <ProductForm mode="create" />
+        ) : route.view === 'producto' ? (
+          <ProductForm mode="edit" productId={route.id} />
+        ) : (
+          <AdminDashboard />
+        )}
       </main>
       <footer className="border-t border-brand-primary/10 py-6">
         <div className="mx-auto w-full max-w-6xl px-4 text-center text-xs text-ink/60 sm:px-6 lg:px-8">
