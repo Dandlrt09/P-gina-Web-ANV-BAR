@@ -3,7 +3,7 @@ import type { Product, ProductImage } from '../data/catalog'
 
 type ProductGalleryProps = {
   product: Product
-  /** Índice del color activo: al cambiar salta a la foto de esa variante. */
+  /** Índice del color activo: la galería muestra SOLO las fotos de esa variante. */
   colorIndex: number
   /** Clases del contenedor de imagen (alto fijo en dvh, fondo, redondeo). */
   containerClassName?: string
@@ -23,14 +23,15 @@ type ProductGalleryProps = {
 const FALLBACK_ASPECT = '4 / 5'
 
 /**
- * Galería de imágenes de producto: muestra las fotos de las variantes de
- * color con foto real (incluidas las de `gallery`).
- *  - Modo 'arrows': navegación con flechas, contador y teclado.
- *  - Modo 'thumbnails': la principal domina y debajo una grilla de
- *    miniaturas; el área se adapta a la relación de la imagen cargada.
- * No hay crossfade hover aquí (ese patrón vive en las tarjetas) y no hay
- * animación de cambio de imagen, por lo que respeta prefers-reduced-motion
- * sin pasos extra.
+ * Galería de imágenes de producto: muestra SOLO las fotos de la variante de
+ * color activa (`colorIndex`) — su foto principal y sus fotos de `gallery`.
+ *  - Modo 'arrows' (vista rápida): navegación con flechas, contador y teclado.
+ *  - Modo 'thumbnails' (ficha completa): la principal domina y debajo una
+ *    grilla de miniaturas; el área se adapta a la relación de la imagen.
+ * Al cambiar de color la galería se reinicia a la primera foto de ESO color;
+ * si el color no tiene fotos, se muestra un aviso honesto en lugar de caer a
+ * las fotos de otra variante. No hay crossfade hover aquí (ese patrón vive en
+ * las tarjetas del catálogo).
  */
 export function ProductGallery({
   product,
@@ -46,30 +47,26 @@ export function ProductGallery({
   const [aspectRatio, setAspectRatio] = useState<number | null>(null)
   const aspectRef = useRef<number | null>(null)
 
-  /** Imágenes únicas del producto (las variantes de color con foto real). Por
-   *  cada imagen se agregan su `src` y luego CADA entrada de su `gallery` como
-   *  foto independiente (sin duplicados dentro de la lista). */
+  /** Fotos del COLOR activo (su principal + cada entrada de su `gallery`, sin
+   *  duplicados). Si el color no tiene imagen, la lista queda vacía y la
+   *  galería muestra un aviso honesto. */
   const images = useMemo<ProductImage[]>(() => {
+    const image = product.colors[colorIndex]?.image
+    if (!image) return []
     const seen = new Set<string>()
     const list: ProductImage[] = []
-    const push = (image: ProductImage | undefined) => {
-      if (!image) return
-      if (image.src && !seen.has(image.src)) {
-        seen.add(image.src)
-        list.push(image)
-      }
-      for (const extra of image.gallery ?? []) {
-        if (extra && !seen.has(extra)) {
-          seen.add(extra)
-          list.push({ src: extra, label: image.label })
-        }
-      }
+    if (image.src && !seen.has(image.src)) {
+      seen.add(image.src)
+      list.push(image)
     }
-    for (const variant of product.colors) {
-      push(variant.image)
+    for (const extra of image.gallery ?? []) {
+      if (extra && !seen.has(extra)) {
+        seen.add(extra)
+        list.push({ src: extra, label: image.label })
+      }
     }
     return list
-  }, [product])
+  }, [product, colorIndex])
 
   const currentList = mode === 'thumbnails' ? (ordered ?? images) : images
   const current = currentList[Math.min(imageIndex, currentList.length - 1)]
@@ -97,26 +94,12 @@ export function ProductGallery({
     })
   }
 
-  // Al cambiar de color, salta a la foto de esa variante si existe.
+  // Al cambiar de color, la galería pasa a las fotos SOLO de ese color:
+  // reset a la primera foto y al orden por miniaturas por defecto.
   useEffect(() => {
-    const variantImage = product.colors[colorIndex]?.image
-    if (!variantImage?.src) return
-    if (mode === 'thumbnails') {
-      setOrdered((cur) => {
-        const list = [...(cur ?? images)]
-        const idx = list.findIndex((img) => img.src === variantImage.src)
-        if (idx <= 0) return list
-        const selected = list[idx]
-        list[idx] = list[0]
-        list[0] = selected
-        return list
-      })
-      return
-    }
-    const idx = images.findIndex((img) => img.src === variantImage.src)
-    if (idx !== -1) setImageIndex(idx)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [colorIndex, images, mode, product])
+    setImageIndex(0)
+    setOrdered(null)
+  }, [colorIndex])
 
   // Teclado ←/→ para navegar la galería; no roba el foco de inputs
   // (p.ej. el textarea de la review en la ficha completa).
@@ -182,7 +165,16 @@ export function ProductGallery({
           className="relative w-full"
           style={{ aspectRatio: mainAspect, maxHeight: '65dvh' }}
         >
-          {current?.src ? (
+          {images.length === 0 ? (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
+              <span className="font-display text-base italic tracking-wide text-brand-primary/70">
+                Este color aún no tiene fotos
+              </span>
+              <span className="text-xs text-ink/60">
+                Elegí otro color o cargá fotos desde el admin.
+              </span>
+            </div>
+          ) : current?.src ? (
             <img
               key={current.src}
               src={current.src}
@@ -270,7 +262,16 @@ export function ProductGallery({
   // Modo 'arrows' (vista rápida): flechas, contador y teclado.
   return (
     <div role="group" aria-label={ariaLabel} className={containerClassName}>
-      {current?.src ? (
+      {images.length === 0 ? (
+        <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+          <span className="px-4 text-center font-display text-base italic tracking-wide text-brand-primary/70">
+            Este color aún no tiene fotos
+          </span>
+          <span className="text-xs text-ink/60">
+            Elegí otro color o cargá fotos desde el admin.
+          </span>
+        </div>
+      ) : current?.src ? (
         <img
           key={current.src}
           src={current.src}
