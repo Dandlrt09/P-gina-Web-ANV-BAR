@@ -16,10 +16,12 @@ import { Contact } from './components/Contact'
 import { Footer } from './components/Footer'
 import { ChatWidget } from './components/ChatWidget'
 import { LikesProvider } from './lib/LikesContext'
+import { AuthProvider } from './lib/AuthContext'
 import { CatalogProvider } from './lib/CatalogContext'
 import { useCatalog } from './lib/catalog-context'
 import { useLikes } from './lib/likes'
 import { CatalogError, CatalogLoading } from './components/CatalogGate'
+import { AdminApp } from './components/admin/AdminApp'
 import { Reveal } from './lib/Reveal'
 
 type View = 'home' | 'favorites' | 'product'
@@ -46,6 +48,12 @@ function routeFromHash(): Route {
   }
   if (hash.startsWith('#/favoritos')) return { view: 'favorites', productId: null }
   return { view: 'home', productId: null }
+}
+
+/** True cuando el hash apunta al admin (#/admin, #/admin/...). Se evalúa
+ *  ANTES del gate del catálogo: el panel nunca espera el fetch. */
+function isAdminHash(): boolean {
+  return window.location.hash.startsWith('#/admin')
 }
 
 function Shop() {
@@ -167,12 +175,29 @@ function Shop() {
 }
 
 function App() {
+  const [isAdmin, setIsAdmin] = useState(isAdminHash)
+
+  useEffect(() => {
+    const onHashChange = () => setIsAdmin(isAdminHash())
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  // Raíz: AuthProvider gobierna ambas ramas. El admin renderiza sin tocar el
+  // fetch del catálogo (el gate nunca lo bloquea); al volver a la tienda la
+  // rama pública se remonta entera y el próximo fetch trae lo recién salvado.
   return (
-    <LikesProvider>
-      <CatalogProvider>
-        <Shop />
-      </CatalogProvider>
-    </LikesProvider>
+    <AuthProvider>
+      {isAdmin ? (
+        <AdminApp />
+      ) : (
+        <LikesProvider>
+          <CatalogProvider>
+            <Shop />
+          </CatalogProvider>
+        </LikesProvider>
+      )}
+    </AuthProvider>
   )
 }
 

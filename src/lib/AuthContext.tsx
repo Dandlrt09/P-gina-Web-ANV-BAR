@@ -1,0 +1,58 @@
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { supabase } from './supabase'
+import { AuthContext, isAdminEmail, type AuthStatus } from './auth'
+
+/**
+ * Provee la sesión de Supabase Auth a todo el árbol.
+ *
+ * AL arrancar restaura la sesión guardada (getSession) y luego ESCUCHA los
+ * cambios (onAuthStateChange), así el state vive solo acá y el gate del admin
+ * es una proyección: signedOut → login, no allowlist → denied, allowlist → ok.
+ * Sin sesión/credenciales nunca se exponen datos del catálogo desde el admin.
+ */
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [status, setStatus] = useState<AuthStatus>('loading')
+  const [email, setEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    const applySession = (sessionEmail: string | null) => {
+      if (!active) return
+      setEmail(sessionEmail)
+      if (sessionEmail === null) {
+        setStatus('signedOut')
+      } else if (isAdminEmail(sessionEmail)) {
+        setStatus('ok')
+      } else {
+        setStatus('denied')
+      }
+    }
+
+    void supabase.auth.getSession().then(({ data }) => {
+      applySession(data.session?.user.email ?? null)
+    })
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySession(session?.user.email ?? null)
+    })
+
+    return () => {
+      active = false
+      subscription.subscription.unsubscribe()
+    }
+  }, [])
+
+  const signIn = useCallback(async (emailInput: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email: emailInput, password })
+    return error ? { error: error.message } : { error: null }
+  }, [])
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut()
+  }, [])
+
+  const value = useMemo(() => ({ status, email, signIn, signOut }), [status, email, signIn, signOut])
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
