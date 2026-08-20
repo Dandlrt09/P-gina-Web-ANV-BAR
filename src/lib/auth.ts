@@ -16,6 +16,10 @@ export type AuthContextValue = {
   email: string | null
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  /** Envía el correo de recuperación de contraseña (link → #/recovery). */
+  sendPasswordReset: (email: string) => Promise<{ error: string | null }>
+  /** Cambia la contraseña de la sesión activa (flujo de recovery). */
+  updatePassword: (newPassword: string) => Promise<{ error: string | null }>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

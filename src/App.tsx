@@ -22,6 +22,7 @@ import { useCatalog } from './lib/catalog-context'
 import { useLikes } from './lib/likes'
 import { CatalogError, CatalogLoading } from './components/CatalogGate'
 import { AdminApp } from './components/admin/AdminApp'
+import { RecoveryPage } from './components/admin/RecoveryPage'
 import { Reveal } from './lib/Reveal'
 
 type View = 'home' | 'favorites' | 'product'
@@ -54,6 +55,13 @@ function routeFromHash(): Route {
  *  ANTES del gate del catálogo: el panel nunca espera el fetch. */
 function isAdminHash(): boolean {
   return window.location.hash.startsWith('#/admin')
+}
+
+/** True cuando el hash apunta a la recuperación de contraseña (#/recovery).
+ *  El link PKCE del correo llega con el code en el query y este fragment
+ *  intacto, así que la app renderiza la página sin depender de la sesión. */
+function isRecoveryHash(): boolean {
+  return window.location.hash.startsWith('#/recovery')
 }
 
 function Shop() {
@@ -174,22 +182,35 @@ function Shop() {
   )
 }
 
+type AppBranch = 'admin' | 'recovery' | 'shop'
+
 function App() {
-  const [isAdmin, setIsAdmin] = useState(isAdminHash)
+  const [branch, setBranch] = useState<AppBranch>(() => {
+    if (isAdminHash()) return 'admin'
+    if (isRecoveryHash()) return 'recovery'
+    return 'shop'
+  })
 
   useEffect(() => {
-    const onHashChange = () => setIsAdmin(isAdminHash())
+    const onHashChange = () => {
+      if (isAdminHash()) setBranch('admin')
+      else if (isRecoveryHash()) setBranch('recovery')
+      else setBranch('shop')
+    }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  // Raíz: AuthProvider gobierna ambas ramas. El admin renderiza sin tocar el
-  // fetch del catálogo (el gate nunca lo bloquea); al volver a la tienda la
-  // rama pública se remonta entera y el próximo fetch trae lo recién salvado.
+  // Raíz: AuthProvider gobierna todas las ramas. El admin y la recuperación
+  // renderizan sin tocar el fetch del catálogo (el gate nunca los bloquea);
+  // al volver a la tienda la rama pública se remonta entera y el próximo
+  // fetch trae lo recién salvado.
   return (
     <AuthProvider>
-      {isAdmin ? (
+      {branch === 'admin' ? (
         <AdminApp />
+      ) : branch === 'recovery' ? (
+        <RecoveryPage />
       ) : (
         <LikesProvider>
           <CatalogProvider>

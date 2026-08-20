@@ -15,4 +15,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Browser client used by the catalog read path only (anon key, read-only by
  * RLS policy). All client-side fetches go through this single instance.
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    // PKCE en vez del implicit por defecto: el link de recovery (y cualquier
+    // redirect) trae el code por QUERY real, preservando nuestro fragment del
+    // hash router (#/recovery). Con implicit, GoTrue sobrescribe el fragment
+    // con #access_token=... y rompería el ruteo por hash de la app.
+    flowType: 'pkce',
+  },
+})

@@ -33,8 +33,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       applySession(data.session?.user.email ?? null)
     })
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
       applySession(session?.user.email ?? null)
+      // El link de recovery (PKCE) llega con el fragment #/recovery intacto,
+      // pero si el usuario lo abre desde un lugar que no lo preservó (p.ej.
+      // un cliente de correo que reescribe la URL), navegamos acá igual.
+      if (event === 'PASSWORD_RECOVERY' && !window.location.hash.startsWith('#/recovery')) {
+        window.location.hash = '/recovery'
+      }
     })
 
     return () => {
@@ -52,7 +58,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut()
   }, [])
 
-  const value = useMemo(() => ({ status, email, signIn, signOut }), [status, email, signIn, signOut])
+  const sendPasswordReset = useCallback(async (emailInput: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(emailInput.trim(), {
+      redirectTo: `${window.location.origin}/#/recovery`,
+    })
+    return error ? { error: error.message } : { error: null }
+  }, [])
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    return error ? { error: error.message } : { error: null }
+  }, [])
+
+  const value = useMemo(
+    () => ({ status, email, signIn, signOut, sendPasswordReset, updatePassword }),
+    [status, email, signIn, signOut, sendPasswordReset, updatePassword],
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
