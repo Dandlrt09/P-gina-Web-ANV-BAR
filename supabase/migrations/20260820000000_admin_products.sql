@@ -100,6 +100,23 @@ create policy "admin delete categories" on public.categories
   using (public.is_admin());
 
 -- ------------------------------------------------------------------------
+-- Read policies for authenticated — admin list queries
+-- ------------------------------------------------------------------------
+-- The base migration granted reads ONLY `to anon`; a signed-in session runs
+-- as `authenticated` and would otherwise get an empty catalog in the admin
+-- list (RLS denies, 0 rows, no error). Products/categories are public
+-- content (anon already reads them), so any signed-in session reading them
+-- is harmless — this only adds the missing read path for admin screens.
+
+drop policy if exists "authenticated read products" on public.products;
+create policy "authenticated read products" on public.products
+  for select to authenticated using (true);
+
+drop policy if exists "authenticated read categories" on public.categories;
+create policy "authenticated read categories" on public.categories
+  for select to authenticated using (true);
+
+-- ------------------------------------------------------------------------
 -- Storage — bucket `productos` write allowlist
 -- ------------------------------------------------------------------------
 -- The `public read productos` policy from the base migration remains the
