@@ -51,7 +51,7 @@ function AdminDenied() {
 
   const handleSignOut = async () => {
     await signOut()
-    window.location.hash = '/'
+    window.location.hash = '/admin/login'
   }
 
   return (
@@ -140,7 +140,7 @@ function AdminPanel() {
 
   const handleSignOut = async () => {
     await signOut()
-    window.location.hash = '/'
+    window.location.hash = '/admin/login'
   }
 
   const navLink = (href: string, label: string, active: boolean) => (
