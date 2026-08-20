@@ -335,13 +335,15 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
 
   // Validación por sección: agrupa los issues bajo el fieldset correspondiente
   // y permite resaltar la celda exacta que hay que corregir.
-  const sectionOfIssue = (field: string): 'basic' | 'sizes' | 'colors' => {
+  const sectionOfIssue = (field: string): 'basic' | 'technical' | 'sizes' | 'colors' => {
     if (field === 'sizes') return 'sizes'
     if (field === 'colors' || field.startsWith('colors.')) return 'colors'
+    if (field === 'fabric' || field === 'care' || field === 'editorial') return 'technical'
     return 'basic'
   }
-  const SECTION_LABELS: Array<{ key: 'basic' | 'sizes' | 'colors'; label: string }> = [
+  const SECTION_LABELS: Array<{ key: 'basic' | 'technical' | 'sizes' | 'colors'; label: string }> = [
     { key: 'basic', label: 'Datos básicos' },
+    { key: 'technical', label: 'Datos técnicos' },
     { key: 'sizes', label: 'Tallas' },
     { key: 'colors', label: 'Variantes de color' },
   ]
@@ -351,7 +353,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
   })).filter((group) => group.items.length > 0)
   const hasIssue = (field: string) =>
     issues.some((issue) => issue.field === field || issue.field.startsWith(`${field}.`))
-  const sectionHasIssue = (key: 'basic' | 'sizes' | 'colors') =>
+  const sectionHasIssue = (key: 'basic' | 'technical' | 'sizes' | 'colors') =>
     issues.some((issue) => sectionOfIssue(issue.field) === key)
   const invalidInput = (field: string) =>
     hasIssue(field) ? 'border-red-400 ring-2 ring-red-400/60 focus:border-red-500' : ''
@@ -512,15 +514,19 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             </label>
           </fieldset>
 
-          <fieldset className="flex flex-col gap-4 rounded-xl border border-brand-primary/15 bg-white/60 p-5 sm:p-6">
+          <fieldset
+            className={`flex flex-col gap-4 rounded-xl border bg-white/60 p-5 sm:p-6 ${
+              sectionHasIssue('technical') ? 'border-red-400/70' : 'border-brand-primary/15'
+            }`}
+          >
             <legend className="px-2 font-display text-lg text-brand-deep">Datos técnicos</legend>
             <label className={labelClass}>
               Tela
-              <input type="text" value={fabric} onChange={(e) => setFabric(e.target.value)} className={inputClass} />
+              <input type="text" value={fabric} onChange={(e) => setFabric(e.target.value)} className={`${inputClass} ${invalidInput('fabric')}`} />
             </label>
             <label className={labelClass}>
               Cuidado
-              <input type="text" value={care} onChange={(e) => setCare(e.target.value)} className={inputClass} />
+              <input type="text" value={care} onChange={(e) => setCare(e.target.value)} className={`${inputClass} ${invalidInput('care')}`} />
             </label>
             <label className={labelClass}>
               Texto editorial
@@ -528,7 +534,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                 value={editorial}
                 onChange={(e) => setEditorial(e.target.value)}
                 rows={3}
-                className={inputClass}
+                className={`${inputClass} ${invalidInput('editorial')}`}
               />
             </label>
           </fieldset>

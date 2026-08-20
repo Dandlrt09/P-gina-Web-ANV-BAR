@@ -87,6 +87,15 @@ export function validateProductInput(input: AdminProductInput): ValidationIssue[
   } else if (!Number.isInteger(input.priceCOP) || input.priceCOP < 0) {
     issues.push({ field: 'priceCOP', message: 'Precio — debe ser un número entero mayor o igual a 0.' })
   }
+  if (input.editorial.trim() === '') {
+    issues.push({ field: 'editorial', message: 'Texto editorial — es obligatorio.' })
+  }
+  if (input.fabric.trim() === '') {
+    issues.push({ field: 'fabric', message: 'Tela — es obligatoria.' })
+  }
+  if (input.care.trim() === '') {
+    issues.push({ field: 'care', message: 'Cuidados — son obligatorios.' })
+  }
   if (input.sizes.length === 0) {
     issues.push({ field: 'sizes', message: 'Tallas — agregá al menos una (ej. S, M, L).' })
   }
