@@ -154,6 +154,11 @@ export type CategoryRow = {
 
 /** Mapea una fila de `products` a `Product` (snake_case → camelCase). */
 export function mapProductRow(row: ProductRow): Product {
+  if (!CATEGORIES.includes(row.category as ProductCategory)) {
+    console.warn(
+      `[catalog] Producto "${row.id}" tiene la categoría "${row.category}", que no está en CATEGORIES: quedará fuera del catálogo hasta que se actualice.`,
+    )
+  }
   return {
     id: row.id,
     name: row.name,

@@ -211,10 +211,16 @@ export function sanitizeStorageName(fileName: string): string {
   return fileName.replace(/\s+/g, '-').replace(/[^\w.-]+/g, '-').replace(/-+/g, '-')
 }
 
-/** Valida el archivo a subir (extensión permitida + límite 5 MB). Null = ok. */
+/** MIME reales aceptados además de la extensión (vacío = el navegador no lo informó). */
+const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+
+/** Valida el archivo a subir (extensión permitida + tipo MIME real + límite 5 MB). Null = ok. */
 export function validateUploadFile(file: File): string | null {
   const ext = `.${file.name.split('.').pop()?.toLowerCase() ?? ''}`
   if (!(ext in EXT_TO_MIME)) return 'Solo se admiten imágenes jpg, png, webp o gif.'
+  if (file.type !== '' && !ALLOWED_MIMES.has(file.type)) {
+    return `El archivo "${file.name}" no parece una imagen válida. Usá jpg, png, webp o gif.`
+  }
   if (file.size > MAX_UPLOAD_BYTES) return 'La imagen supera el límite de 5 MB.'
   return null
 }

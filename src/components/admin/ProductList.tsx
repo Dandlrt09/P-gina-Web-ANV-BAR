@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { formatCOP, type Product } from '../../data/catalog'
+import { CATEGORIES, formatCOP, type Product } from '../../data/catalog'
 import { deleteProduct, deleteProductImages, listAdminProducts } from '../../lib/admin/products'
 
 /**
@@ -122,6 +122,14 @@ export function ProductList() {
                       {product.isNew && (
                         <span className="rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-medium text-accent">
                           Novedad
+                        </span>
+                      )}
+                      {!CATEGORIES.includes(product.category) && (
+                        <span
+                          className="rounded-full bg-amber-200/70 px-2.5 py-0.5 text-xs font-medium text-amber-900"
+                          title="Esta categoría ya no está en la lista vigente del catálogo"
+                        >
+                          Categoría no vigente
                         </span>
                       )}
                     </div>

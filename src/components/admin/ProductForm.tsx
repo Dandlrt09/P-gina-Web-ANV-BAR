@@ -417,15 +417,27 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             <label className={labelClass}>
               Categoría
               <select value={category} onChange={(e) => setCategory(e.target.value as Product['category'])} className={inputClass}>
+                {!CATEGORIES.includes(category as Product['category']) && (
+                  <option value={category} disabled>
+                    {category} (no vigente)
+                  </option>
+                )}
                 {CATEGORIES.map((option) => (
                   <option key={option} value={option}>
                     {option}
                   </option>
                 ))}
               </select>
-              <span className="text-xs text-ink/60">
-                Lista vigente del catálogo (la capa de categorías dinámicas llega en una etapa posterior).
-              </span>
+              {CATEGORIES.includes(category as Product['category']) ? (
+                <span className="text-xs text-ink/60">
+                  Lista vigente del catálogo (la capa de categorías dinámicas llega en una etapa posterior).
+                </span>
+              ) : (
+                <span className="text-xs font-medium text-brand-deep">
+                  Este producto quedó fuera del catálogo: la categoría «{category}» ya no está en la lista
+                  vigente. Elegí una categoría para que vuelva a aparecer.
+                </span>
+              )}
             </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className={labelClass}>
@@ -620,6 +632,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                       onChange={(e) => updateColor(index, { srcFile: e.target.files?.[0] ?? null })}
                       className="text-sm text-ink/70 file:mr-3 file:rounded-full file:border-0 file:bg-brand-primary file:px-4 file:py-1.5 file:text-sm file:font-medium file:text-surface"
                     />
+                    <span className="text-xs text-ink/60">JPG, PNG, WEBP o GIF · máx. 5 MB por archivo.</span>
                   </div>
                   <div className="flex flex-col gap-2">
                     <span className="text-sm font-medium text-brand-deep">Fotos adicionales</span>
@@ -648,6 +661,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                       }}
                       className="text-sm text-ink/70 file:mr-3 file:rounded-full file:border-0 file:bg-brand-primary file:px-4 file:py-1.5 file:text-sm file:font-medium file:text-surface"
                     />
+                    <span className="text-xs text-ink/60">JPG, PNG, WEBP o GIF · máx. 5 MB por archivo.</span>
                     {draftColor.galleryFiles.length > 0 && (
                       <button
                         type="button"
