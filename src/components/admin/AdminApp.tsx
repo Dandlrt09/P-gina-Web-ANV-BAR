@@ -3,6 +3,7 @@ import { useAuth } from '../../lib/auth'
 import { AdminLogin } from './AdminLogin'
 import { ProductList } from './ProductList'
 import { ProductForm } from './ProductForm'
+import { ImportProducts } from './ImportProducts'
 
 /**
  * Rutas internas del admin (hash-based, mismas convenciones que la tienda).
@@ -11,12 +12,14 @@ import { ProductForm } from './ProductForm'
  *   #/admin/productos                → listado de productos
  *   #/admin/productos/nuevo          → alta de producto
  *   #/admin/productos/<id>           → edición de producto
+ *   #/admin/importar                 → carga masiva desde planilla
  */
 type AdminRoute =
   | { view: 'dashboard' }
   | { view: 'productos' }
   | { view: 'nuevo' }
   | { view: 'producto'; id: string }
+  | { view: 'importar' }
 
 function routeFromAdminHash(): AdminRoute {
   const hash = window.location.hash
@@ -31,6 +34,7 @@ function routeFromAdminHash(): AdminRoute {
     return id === 'nuevo' ? { view: 'nuevo' } : { view: 'producto', id }
   }
   if (hash.startsWith('#/admin/productos')) return { view: 'productos' }
+  if (hash.startsWith('#/admin/importar')) return { view: 'importar' }
   return { view: 'dashboard' }
 }
 
@@ -116,6 +120,15 @@ function AdminDashboard() {
             </p>
           </a>
           <a
+            href="#/admin/importar"
+            className="rounded-xl border border-brand-primary/15 bg-white/60 p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-primary/10 motion-reduce:transform-none motion-reduce:transition-none"
+          >
+            <h2 className="font-display text-lg text-brand-deep">Importar productos</h2>
+            <p className="mt-1 text-sm text-ink/80">
+              Cargá varias piezas de una desde una planilla (Excel/CSV), con fotos por URL.
+            </p>
+          </a>
+          <a
             href="#/"
             className="rounded-xl border border-brand-primary/15 bg-white/60 p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-primary/10 motion-reduce:transform-none motion-reduce:transition-none"
           >
@@ -176,6 +189,7 @@ function AdminPanel() {
           {navLink('#/admin', 'Panel', route.view === 'dashboard')}
           {navLink('#/admin/productos', 'Productos', route.view === 'productos')}
           {navLink('#/admin/productos/nuevo', 'Nuevo producto', route.view === 'nuevo')}
+          {navLink('#/admin/importar', 'Importar', route.view === 'importar')}
         </nav>
       </header>
       <main className="flex-1">
@@ -185,6 +199,8 @@ function AdminPanel() {
           <ProductForm mode="create" />
         ) : route.view === 'producto' ? (
           <ProductForm mode="edit" productId={route.id} />
+        ) : route.view === 'importar' ? (
+          <ImportProducts />
         ) : (
           <AdminDashboard />
         )}
