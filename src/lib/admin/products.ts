@@ -39,6 +39,8 @@ export type AdminProductInput = {
   name: string
   category: Product['category']
   priceCOP: number
+  /** String cruda del input de precio: permite distinguir "vacío" de 0 al validar. */
+  priceRaw?: string
   isNew: boolean
   sortOrder: number | null
   editorial: string
@@ -55,49 +57,59 @@ export type ValidationIssue = { field: string; message: string }
 /* ------------------------------------------------------------------ */
 
 /**
- * Valida el payload ANTES de escribir: precio int >= 0, tallas no vacías,
- * color con name+hex (y label si hay imagen), categoría dentro de la lista
- * vigente e id-slug válido en alta. Devuelve la lista de errores; vacía =
- * ok. Un payload inválido jamás toca la base (reject with nothing changed).
+ * Valida el payload ANTES de escribir: precio int >= 0 (vacío = error),
+ * tallas no vacías, color con name+hex (y label si hay imagen), categoría
+ * dentro de la lista vigente e id-slug válido en alta. Cada mensaje nombra
+ * la sección (o celda) exacta a corregir. Devuelve la lista de errores;
+ * vacía = ok. Un payload inválido jamás toca la base (reject with nothing
+ * changed).
  */
 export function validateProductInput(input: AdminProductInput): ValidationIssue[] {
   const issues: ValidationIssue[] = []
   const id = input.id.trim()
   if (id === '') {
-    issues.push({ field: 'id', message: 'El identificador es obligatorio.' })
+    issues.push({ field: 'id', message: 'Identificador — es obligatorio.' })
   } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
     issues.push({
       field: 'id',
-      message: 'El identificador admite solo minúsculas, números y guiones (ej. vestido-marfil).',
+      message: 'Identificador — solo minúsculas, números y guiones (ej. vestido-marfil).',
     })
   }
-  if (input.name.trim() === '') issues.push({ field: 'name', message: 'El nombre es obligatorio.' })
+  if (input.name.trim() === '') issues.push({ field: 'name', message: 'Nombre — es obligatorio.' })
   if (!CATEGORIES.includes(input.category)) {
-    issues.push({ field: 'category', message: 'La categoría no está en la lista vigente del catálogo.' })
+    issues.push({
+      field: 'category',
+      message: `Categoría — «${input.category}» no está en la lista vigente del catálogo.`,
+    })
   }
-  if (!Number.isInteger(input.priceCOP) || input.priceCOP < 0) {
-    issues.push({ field: 'priceCOP', message: 'El precio debe ser un número entero mayor o igual a 0.' })
+  if (input.priceRaw !== undefined && input.priceRaw.trim() === '') {
+    issues.push({ field: 'priceCOP', message: 'Precio — es obligatorio.' })
+  } else if (!Number.isInteger(input.priceCOP) || input.priceCOP < 0) {
+    issues.push({ field: 'priceCOP', message: 'Precio — debe ser un número entero mayor o igual a 0.' })
   }
   if (input.sizes.length === 0) {
-    issues.push({ field: 'sizes', message: 'Agregá al menos una talla.' })
+    issues.push({ field: 'sizes', message: 'Tallas — agregá al menos una (ej. S, M, L).' })
   }
   if (input.colors.length === 0) {
-    issues.push({ field: 'colors', message: 'Cada producto necesita al menos una variante de color.' })
+    issues.push({ field: 'colors', message: 'Variantes de color — agregá al menos una variante.' })
   }
   input.colors.forEach((color, index) => {
     if (color.name.trim() === '') {
-      issues.push({ field: `colors.${index}.name`, message: `La variante ${index + 1} necesita un nombre.` })
+      issues.push({
+        field: `colors.${index}.name`,
+        message: `Variante ${index + 1} — Nombre del color: está vacío.`,
+      })
     }
     if (!/^#[0-9a-fA-F]{6}$/.test(color.hex.trim())) {
       issues.push({
         field: `colors.${index}.hex`,
-        message: `La variante ${index + 1} necesita un color hexadecimal (#rrggbb).`,
+        message: `Variante ${index + 1} — Hex: debe ser un color #rrggbb (ej. #58232c).`,
       })
     }
     if (color.image && color.image.label.trim() === '') {
       issues.push({
         field: `colors.${index}.image.label`,
-        message: `La variante ${index + 1} tiene imagen pero le falta el texto descriptivo (label).`,
+        message: `Variante ${index + 1} — Foto: subí una imagen o quitá el texto pendiente.`,
       })
     }
   })

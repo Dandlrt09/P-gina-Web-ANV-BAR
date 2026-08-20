@@ -191,6 +191,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       name,
       category,
       priceCOP,
+      priceRaw: price,
       isNew,
       sortOrder: sortOrderParsed != null && Number.isFinite(sortOrderParsed) ? sortOrderParsed : null,
       editorial,
@@ -332,6 +333,29 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
 
   const pricePreview = Number.isInteger(Number(price.trim())) && Number(price.trim()) >= 0 ? formatCOP(Number(price.trim())) : ''
 
+  // Validación por sección: agrupa los issues bajo el fieldset correspondiente
+  // y permite resaltar la celda exacta que hay que corregir.
+  const sectionOfIssue = (field: string): 'basic' | 'sizes' | 'colors' => {
+    if (field === 'sizes') return 'sizes'
+    if (field === 'colors' || field.startsWith('colors.')) return 'colors'
+    return 'basic'
+  }
+  const SECTION_LABELS: Array<{ key: 'basic' | 'sizes' | 'colors'; label: string }> = [
+    { key: 'basic', label: 'Datos básicos' },
+    { key: 'sizes', label: 'Tallas' },
+    { key: 'colors', label: 'Variantes de color' },
+  ]
+  const issueGroups = SECTION_LABELS.map((group) => ({
+    section: group.label,
+    items: issues.filter((issue) => sectionOfIssue(issue.field) === group.key),
+  })).filter((group) => group.items.length > 0)
+  const hasIssue = (field: string) =>
+    issues.some((issue) => issue.field === field || issue.field.startsWith(`${field}.`))
+  const sectionHasIssue = (key: 'basic' | 'sizes' | 'colors') =>
+    issues.some((issue) => sectionOfIssue(issue.field) === key)
+  const invalidInput = (field: string) =>
+    hasIssue(field) ? 'border-red-400 ring-2 ring-red-400/60 focus:border-red-500' : ''
+
   return (
     <section className="py-10 sm:py-14">
       <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8">
@@ -359,18 +383,29 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
           </div>
         )}
         {issues.length > 0 && !saved && (
-          <div role="alert" className="mt-6 rounded-xl border border-brand-primary/25 bg-white/60 p-5 text-sm text-brand-deep">
-            <p className="font-medium">Revisá los siguientes campos:</p>
-            <ul className="mt-2 list-inside list-disc space-y-1 text-ink/80">
-              {issues.map((issue) => (
-                <li key={issue.field}>{issue.message}</li>
-              ))}
-            </ul>
+          <div role="alert" className="mt-6 rounded-xl border border-red-400/60 bg-white/60 p-5 text-sm text-brand-deep">
+            <p className="font-medium">Faltan datos por corregir:</p>
+            {issueGroups.map((group) => (
+              <div key={group.section} className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-brand-deep">
+                  {group.section}
+                </p>
+                <ul className="mt-1 list-inside list-disc space-y-1 text-ink/80">
+                  {group.items.map((issue) => (
+                    <li key={issue.field}>{issue.message}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-8">
-          <fieldset className="flex flex-col gap-4 rounded-xl border border-brand-primary/15 bg-white/60 p-5 sm:p-6">
+          <fieldset
+            className={`flex flex-col gap-4 rounded-xl border bg-white/60 p-5 sm:p-6 ${
+              sectionHasIssue('basic') ? 'border-red-400/70' : 'border-brand-primary/15'
+            }`}
+          >
             <legend className="px-2 font-display text-lg text-brand-deep">Datos básicos</legend>
             {mode === 'create' ? (
               <label className={labelClass}>
@@ -384,7 +419,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                       setIdTouched(true)
                     }}
                     placeholder="vestido-marfil"
-                    className={inputClass}
+                    className={`${inputClass} ${invalidInput('id')}`}
                   />
                   <button
                     type="button"
@@ -411,12 +446,12 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                 type="text"
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
-                className={inputClass}
+                className={`${inputClass} ${invalidInput('name')}`}
               />
             </label>
             <label className={labelClass}>
               Categoría
-              <select value={category} onChange={(e) => setCategory(e.target.value as Product['category'])} className={inputClass}>
+              <select value={category} onChange={(e) => setCategory(e.target.value as Product['category'])} className={`${inputClass} ${invalidInput('category')}`}>
                 {!CATEGORIES.includes(category as Product['category']) && (
                   <option value={category} disabled>
                     {category} (no vigente)
@@ -448,7 +483,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                   step={1}
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className={inputClass}
+                  className={`${inputClass} ${invalidInput('priceCOP')}`}
                 />
                 {pricePreview && <span className="text-xs text-ink/60">Se mostrará como {pricePreview}</span>}
               </label>
@@ -498,7 +533,11 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             </label>
           </fieldset>
 
-          <fieldset className="flex flex-col gap-4 rounded-xl border border-brand-primary/15 bg-white/60 p-5 sm:p-6">
+          <fieldset
+            className={`flex flex-col gap-4 rounded-xl border bg-white/60 p-5 sm:p-6 ${
+              sectionHasIssue('sizes') ? 'border-red-400/70' : 'border-brand-primary/15'
+            }`}
+          >
             <legend className="px-2 font-display text-lg text-brand-deep">Tallas</legend>
             {category === 'Accesorios' ? (
               <p className="text-sm text-ink/80">Los accesorios se guardan siempre con la talla «Único».</p>
@@ -560,7 +599,11 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             )}
           </fieldset>
 
-          <fieldset className="flex flex-col gap-4 rounded-xl border border-brand-primary/15 bg-white/60 p-5 sm:p-6">
+          <fieldset
+            className={`flex flex-col gap-4 rounded-xl border bg-white/60 p-5 sm:p-6 ${
+              sectionHasIssue('colors') ? 'border-red-400/70' : 'border-brand-primary/15'
+            }`}
+          >
             <legend className="px-2 font-display text-lg text-brand-deep">Variantes de color</legend>
             {colors.map((draftColor, index) => (
               <article
@@ -575,7 +618,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                       value={draftColor.name}
                       onChange={(e) => updateColor(index, { name: e.target.value })}
                       placeholder="Ej: Burdeo"
-                      className={inputClass}
+                      className={`${inputClass} ${invalidInput(`colors.${index}.name`)}`}
                     />
                   </label>
                   <label className={labelClass}>
@@ -593,7 +636,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                         value={draftColor.hex}
                         onChange={(e) => updateColor(index, { hex: e.target.value })}
                         placeholder="#rrggbb"
-                        className={inputClass}
+                        className={`${inputClass} ${invalidInput(`colors.${index}.hex`)}`}
                       />
                     </div>
                   </label>
@@ -606,7 +649,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                     value={draftColor.label}
                     onChange={(e) => updateColor(index, { label: e.target.value })}
                     placeholder="Ej: Camisa Ónix — Negro"
-                    className={inputClass}
+                    className={`${inputClass} ${invalidInput(`colors.${index}.image.label`)}`}
                   />
                   <span className="text-xs text-ink/60">
                     Obligatorio si cargaste o guardaste una foto. Se usa como texto alternativo y placeholder.
