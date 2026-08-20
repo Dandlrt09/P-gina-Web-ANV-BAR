@@ -8,7 +8,10 @@ import {
 import {
   createProduct,
   fetchProduct,
+  listExistingIds,
   removeStrayUploads,
+  slugifyName,
+  uniqueSlug,
   updateProduct,
   uploadProductImage,
   validateProductInput,
@@ -69,6 +72,8 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
   const [attempt, setAttempt] = useState(0)
 
   const [id, setId] = useState('')
+  const [idTouched, setIdTouched] = useState(false)
+  const [existingIds, setExistingIds] = useState<Set<string>>(new Set())
   const [name, setName] = useState('')
   const [category, setCategory] = useState<Product['category']>(CATEGORIES[0])
   const [price, setPrice] = useState('')
@@ -85,6 +90,24 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
   const [apiError, setApiError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (mode !== 'create') return
+    // Carga best-effort de los ids existentes solo al alta: alimenta el slug
+    // único automático. Si falla, el insert reportará el duplicado igual.
+    let active = true
+    listExistingIds()
+      .then((ids) => {
+        if (active) setExistingIds(new Set(ids))
+      })
+      .catch(() => {
+        /* sin la lista seguimos: el slug se genera igual y la validación
+           previa al guardar cubre el resto */
+      })
+    return () => {
+      active = false
+    }
+  }, [mode])
 
   useEffect(() => {
     if (mode === 'create') {
@@ -123,6 +146,18 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       active = false
     }
   }, [mode, productId, attempt])
+
+  const handleNameChange = (value: string) => {
+    setName(value)
+    if (mode === 'create' && !idTouched) {
+      setId(uniqueSlug(slugifyName(value), existingIds))
+    }
+  }
+
+  const handleRegenerateId = () => {
+    setIdTouched(false)
+    setId(uniqueSlug(slugifyName(name), existingIds))
+  }
 
   const addSize = () => {
     const value = sizeInput.trim()
@@ -178,6 +213,15 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
     const found = validateProductInput(draft)
     if (found.length > 0) {
       setIssues(found)
+      return
+    }
+    if (mode === 'create' && existingIds.has(draft.id)) {
+      setIssues([
+        {
+          field: 'id',
+          message: `Ya existe un producto con el identificador "${draft.id}". Probá con otro o usá "Generar desde el nombre".`,
+        },
+      ])
       return
     }
 
@@ -331,15 +375,29 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             {mode === 'create' ? (
               <label className={labelClass}>
                 Identificador (slug)
-                <input
-                  type="text"
-                  value={id}
-                  onChange={(e) => setId(e.target.value)}
-                  placeholder="vestido-marfil"
-                  className={inputClass}
-                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="text"
+                    value={id}
+                    onChange={(e) => {
+                      setId(e.target.value)
+                      setIdTouched(true)
+                    }}
+                    placeholder="vestido-marfil"
+                    className={inputClass}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRegenerateId}
+                    className="shrink-0 rounded-full border border-brand-primary/40 px-4 py-2 text-sm font-medium text-brand-deep transition-colors hover:bg-brand-primary/5"
+                  >
+                    Generar desde el nombre
+                  </button>
+                </div>
                 <span className="text-xs text-ink/60">
-                  Minúsculas, números y guiones. Se usa en los enlaces y favoritos; no se puede editar después.
+                  {mode === 'create' && !idTouched && id !== ''
+                    ? `Automático desde el nombre: ${id}. Podés ajustarlo antes de guardar; no se puede editar después.`
+                    : 'Minúsculas, números y guiones. Se usa en los enlaces y favoritos; no se puede editar después.'}
                 </span>
               </label>
             ) : (
@@ -349,7 +407,12 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
             )}
             <label className={labelClass}>
               Nombre
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => handleNameChange(e.target.value)}
+                className={inputClass}
+              />
             </label>
             <label className={labelClass}>
               Categoría

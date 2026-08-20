@@ -105,6 +105,44 @@ export function validateProductInput(input: AdminProductInput): ValidationIssue[
 }
 
 /* ------------------------------------------------------------------ */
+/* Slug automático (CR-PA-02 / experiencia de alta)                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Deriva un slug válido desde el nombre: minúsculas, sin acentos, espacios
+ * y símbolos → guiones. Devuelve '' si no quedó ningún carácter válido
+ * (la validación lo rechaza como identificador obligatorio).
+ */
+export function slugifyName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+/** Ids existentes (solo la columna id) para evitar colisiones al alta. */
+export async function listExistingIds(): Promise<string[]> {
+  const { data, error } = await supabase.from('products').select('id')
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((row) => row.id as string)
+}
+
+/** Devuelve `base` o `base-2`, `base-3`… si ya existe en `existing`. */
+export function uniqueSlug(base: string, existing: ReadonlySet<string>): string {
+  if (base === '') return ''
+  if (!existing.has(base)) return base
+  let candidate = base
+  let n = 2
+  while (existing.has(candidate)) {
+    candidate = `${base}-${n}`
+    n += 1
+  }
+  return candidate
+}
+
+/* ------------------------------------------------------------------ */
 /* Persistencia                                                       */
 /* ------------------------------------------------------------------ */
 
