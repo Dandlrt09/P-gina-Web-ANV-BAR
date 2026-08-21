@@ -1,5 +1,5 @@
 import { CATEGORIES } from '../catalog/catalog'
-import { CONTACT_CHANNELS } from '../storefront/contact-data'
+import { getContactChannels } from '../catalog/contactChannels'
 import { WHATSAPP_NUMBER, SHIPPING_NOTICE } from '../storefront/whatsapp'
 
 export type ChatAnswer = {
@@ -7,22 +7,44 @@ export type ChatAnswer = {
   link?: { label: string; href: string }
 }
 
+export type ChatLink = { label: string; href: string }
+
 export type ChatRule = {
   id: string
   keywords: string[]
   title: string
   answer: string | ((input: string) => string)
-  link?: { label: string; href: string }
+  link?: ChatLink | ((input: string) => ChatLink)
 }
 
-const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`
+/* ------------------------------------------------------------------ */
+/* Live channel lookups                                               */
+/*                                                                    */
+/* Contact channels come from the catalog module singleton, which     */
+/* hydrates once per page load from Supabase (bundled JSON until it   */
+/* lands). Reading them AT ANSWER TIME — not at module load — keeps   */
+/* the chat in sync whenever the owner edits a channel in the panel.  */
+/* ------------------------------------------------------------------ */
 
-const whatsappHandle =
-  CONTACT_CHANNELS.find((channel) => channel.label === 'WhatsApp')?.handle ?? '3186424021'
-const instagramHandle =
-  CONTACT_CHANNELS.find((channel) => channel.label === 'Instagram')?.handle ?? '@anv.bar_av'
-const designerHandle =
-  CONTACT_CHANNELS.find((channel) => channel.label === 'Diseñadora')?.handle ?? '@anysval_'
+/** Deep link to the WhatsApp ordering channel; falls back to the bundled number. */
+function whatsappHref(): string {
+  const channel = getContactChannels().find((item) => item.label === 'WhatsApp')
+  return channel?.href ?? `https://wa.me/${WHATSAPP_NUMBER}`
+}
+
+/**
+ * The designer's PERSONAL Instagram: the last Instagram-labelled channel,
+ * since the owner keeps it after the brand account. Falls back to the seeded
+ * profile when only the brand account exists.
+ */
+function designerInstagram(): ChatLink {
+  const instagrams = getContactChannels().filter((item) => item.label === 'Instagram')
+  const personal = instagrams.length > 1 ? instagrams[instagrams.length - 1] : undefined
+  if (personal) {
+    return { label: personal.handle || 'Instagram de la diseñadora', href: personal.href }
+  }
+  return { label: '@anysval_', href: 'https://www.instagram.com/anysval_' }
+}
 
 /**
  * Rule-based Q&A for the ANV·BAR chat widget. Each rule matches on plain
@@ -36,7 +58,7 @@ export const RULES: ChatRule[] = [
     keywords: ['pedido', 'pedir', 'orden', 'compra', 'comprar', 'encargo', 'encargar', 'quiero', 'quisiera'],
     answer:
       'Gracias por su interés. Los pedidos de ANV·BAR se tramitan por WhatsApp con un mensaje de texto: indique la pieza, el color y la talla que desea, y la diseñadora le confirmará la disponibilidad. Las piezas se elaboran a mano bajo pedido.',
-    link: { label: 'Pedir por WhatsApp', href: WHATSAPP_LINK },
+    link: () => ({ label: 'Pedir por WhatsApp', href: whatsappHref() }),
   },
   {
     id: 'shipping',
@@ -56,15 +78,17 @@ export const RULES: ChatRule[] = [
       'tiempo de entrega',
     ],
     answer: `${SHIPPING_NOTICE}. Las piezas se confeccionan a mano después de confirmar el pedido, por eso el tiempo de entrega. Si su consulta es urgente, puede escribirnos directamente por WhatsApp.`,
-    link: { label: 'Consultar por WhatsApp', href: WHATSAPP_LINK },
+    link: () => ({ label: 'Consultar por WhatsApp', href: whatsappHref() }),
   },
   {
     id: 'sizes',
     title: 'Tallas y medidas',
     keywords: ['talla', 'tallas', 'medida', 'medidas', 'tabla de tallas', 'mi talla'],
-    answer:
-      'Cada pieza tiene su tabla de tallas en la ficha del producto, ya que las medidas varían según la prenda. Si tiene dudas sobre cuál elegir, Anays la asesora por WhatsApp o por Instagram, y también puede escribir a la diseñadora en @anysval_.',
-    link: { label: 'Diseñadora @anysval_', href: 'https://www.instagram.com/anysval_' },
+    answer: () => {
+      const designer = designerInstagram()
+      return `Cada pieza tiene su tabla de tallas en la ficha del producto, ya que las medidas varían según la prenda. Si tiene dudas sobre cuál elegir, Anays la asesora por WhatsApp o por Instagram, y también puede escribir a la diseñadora en ${designer.label}.`
+    },
+    link: () => designerInstagram(),
   },
   {
     id: 'payment',
@@ -72,7 +96,7 @@ export const RULES: ChatRule[] = [
     keywords: ['pago', 'pagos', 'pagar', 'forma de pago', 'medio de pago', 'transferencia', 'nequi'],
     answer:
       'El pago se acuerda directamente con la diseñadora por WhatsApp: no contamos con pasarela de pago en línea. Al confirmar su pedido, se coordina la forma de pago más cómoda para usted.',
-    link: { label: 'Coordinar pago por WhatsApp', href: WHATSAPP_LINK },
+    link: () => ({ label: 'Coordinar pago por WhatsApp', href: whatsappHref() }),
   },
   {
     id: 'returns',
@@ -91,7 +115,7 @@ export const RULES: ChatRule[] = [
     ],
     answer:
       'Como las piezas se hacen a mano, los cambios y devoluciones se coordinan con la diseñadora durante los primeros días después de la entrega. Escríbanos por WhatsApp y le indicamos el procedimiento.',
-    link: { label: 'Escribir por WhatsApp', href: WHATSAPP_LINK },
+    link: () => ({ label: 'Escribir por WhatsApp', href: whatsappHref() }),
   },
   {
     id: 'fabric',
@@ -110,8 +134,14 @@ export const RULES: ChatRule[] = [
     id: 'contact',
     title: 'Contacto',
     keywords: ['contacto', 'hablar', 'persona', 'humano', 'asesor', 'asesora', 'atención', 'atencion', 'urgente'],
-    answer: `Puede escribirnos por WhatsApp al ${whatsappHandle} (siempre por mensaje de texto), o encontrarnos en Instagram ${instagramHandle}, Facebook Marketplace o con la diseñadora ${designerHandle}.`,
-    link: { label: 'Abrir WhatsApp', href: WHATSAPP_LINK },
+    answer: () => {
+      const parts = getContactChannels().map((channel) => {
+        const handle = channel.handle.trim()
+        return handle ? `${channel.label} (${handle})` : channel.label
+      })
+      return `Puede escribirnos por cualquiera de estos canales —siempre por mensaje de texto, sin llamadas—: ${parts.join(', ')}.`
+    },
+    link: () => ({ label: 'Abrir WhatsApp', href: whatsappHref() }),
   },
   {
     id: 'greeting',
@@ -138,7 +168,7 @@ export const RULES: ChatRule[] = [
     ],
     answer:
       'El precio de cada pieza aparece en su ficha del catálogo, y varía según el modelo, la tela y la confección. Si desea una cotización personalizada —por ejemplo para varias piezas— puede escribirnos por WhatsApp con la referencia de la prenda y la cantidad.',
-    link: { label: 'Cotizar por WhatsApp', href: WHATSAPP_LINK },
+    link: () => ({ label: 'Cotizar por WhatsApp', href: whatsappHref() }),
   },
   {
     id: 'occasion',
@@ -166,7 +196,7 @@ export const RULES: ChatRule[] = [
     ],
     answer:
       'En ANV·BAR encontrará piezas para eventos y ocasiones especiales: desde looks de día hasta vestidos de ceremonia, todos cosidos a mano. Para elegir la prenda ideal para su evento, Anays la asesora de forma personalizada por WhatsApp o Instagram.',
-    link: { label: 'Asesoría para su evento', href: WHATSAPP_LINK },
+    link: () => ({ label: 'Asesoría para su evento', href: whatsappHref() }),
   },
   {
     id: 'bulk',
@@ -188,7 +218,7 @@ export const RULES: ChatRule[] = [
     ],
     answer:
       'Cada pedido se cotiza de forma personalizada según la pieza, la tela y la cantidad. Para encargos por volumen —como varias piezas o un grupo para un evento— escríbanos por WhatsApp indicando cuántas prendas necesita y para qué fecha, y le damos una cotización.',
-    link: { label: 'Cotizar por volumen', href: WHATSAPP_LINK },
+    link: () => ({ label: 'Cotizar por volumen', href: whatsappHref() }),
   },
   {
     id: 'fallback',
@@ -196,7 +226,7 @@ export const RULES: ChatRule[] = [
     keywords: [],
     answer:
       'Disculpe, no encontré una respuesta clara para esa consulta. Para que le atiendan de forma personalizada, le recomiendo escribirnos por WhatsApp y el equipo de ANV·BAR le responderá.',
-    link: { label: 'Escribir por WhatsApp', href: WHATSAPP_LINK },
+    link: () => ({ label: 'Escribir por WhatsApp', href: whatsappHref() }),
   },
 ]
 
@@ -234,5 +264,6 @@ export function answerFor(input: string): ChatAnswer {
 
   const rule = best ?? RULES[RULES.length - 1]
   const text = typeof rule.answer === 'function' ? rule.answer(normalized) : rule.answer
-  return rule.link ? { text, link: rule.link } : { text }
+  const link = typeof rule.link === 'function' ? rule.link(normalized) : rule.link
+  return link ? { text, link } : { text }
 }
