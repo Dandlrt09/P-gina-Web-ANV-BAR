@@ -25,11 +25,14 @@ begin
   end if;
   raise notice 'PASS — anon SELECT reads the 4 seeded contact channels';
 
+  -- NOTE: the 4th channel was originally seeded as 'Diseñadora' and is now the
+  -- designer's PERSONAL Instagram, relabelled through #/admin/contacto — hence
+  -- two 'Instagram' entries. Run this fixture AFTER that relabel.
   select array_agg(label order by sort_order asc) into v_labels from public.contact_channels;
-  if v_labels is distinct from array['WhatsApp', 'Instagram', 'Facebook Marketplace', 'Diseñadora'] then
-    raise exception 'FAIL — ordering query returned %; expected WhatsApp, Instagram, Facebook Marketplace, Diseñadora.', v_labels;
+  if v_labels is distinct from array['WhatsApp', 'Instagram', 'Facebook Marketplace', 'Instagram'] then
+    raise exception 'FAIL — ordering query returned %; expected WhatsApp, Instagram, Facebook Marketplace, Instagram.', v_labels;
   end if;
-  raise notice 'PASS — ORDER BY sort_order ASC yields WhatsApp, Instagram, Facebook Marketplace, Diseñadora';
+  raise notice 'PASS — ORDER BY sort_order ASC yields WhatsApp, Instagram, Facebook Marketplace, Instagram';
 
   reset role;
 
