@@ -88,7 +88,7 @@ export function validateProductInput(input: AdminProductInput): ValidationIssue[
     issues.push({ field: 'priceCOP', message: 'Precio — debe ser un número entero mayor o igual a 0.' })
   }
   if (input.editorial.trim() === '') {
-    issues.push({ field: 'editorial', message: 'Texto editorial — es obligatorio.' })
+    issues.push({ field: 'editorial', message: 'Descripción — es obligatoria.' })
   }
   if (input.fabric.trim() === '') {
     issues.push({ field: 'fabric', message: 'Tela — es obligatoria.' })

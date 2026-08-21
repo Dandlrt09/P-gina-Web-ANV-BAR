@@ -529,7 +529,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
               <input type="text" value={care} onChange={(e) => setCare(e.target.value)} className={`${inputClass} ${invalidInput('care')}`} />
             </label>
             <label className={labelClass}>
-              Texto editorial
+              Descripción
               <textarea
                 value={editorial}
                 onChange={(e) => setEditorial(e.target.value)}
