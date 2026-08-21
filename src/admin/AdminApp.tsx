@@ -4,15 +4,17 @@ import { AdminLogin } from './AdminLogin'
 import { ProductList } from './ProductList'
 import { ProductForm } from './ProductForm'
 import { ImportProducts } from './ImportProducts'
+import { ContactChannelsManager } from './ContactChannelsManager'
 
 /**
- * Rutas internas del admin (hash-based, mismas convenciones que la tienda).
+ * Admin internal routes (hash-based, same conventions as the storefront).
  *   #/admin                          → panel (dashboard)
- *   #/admin/login                    → login (lo muestra el gate signedOut)
- *   #/admin/productos                → listado de productos
- *   #/admin/productos/nuevo          → alta de producto
- *   #/admin/productos/<id>           → edición de producto
- *   #/admin/importar                 → carga masiva desde planilla
+ *   #/admin/login                    → login (rendered by the signedOut gate)
+ *   #/admin/productos                → product list
+ *   #/admin/productos/nuevo          → create product
+ *   #/admin/productos/<id>           → edit product
+ *   #/admin/importar                 → spreadsheet bulk import
+ *   #/admin/contacto                 → contact channels manager
  */
 type AdminRoute =
   | { view: 'dashboard' }
@@ -20,6 +22,7 @@ type AdminRoute =
   | { view: 'nuevo' }
   | { view: 'producto'; id: string }
   | { view: 'importar' }
+  | { view: 'contacto' }
 
 function routeFromAdminHash(): AdminRoute {
   const hash = window.location.hash
@@ -35,6 +38,7 @@ function routeFromAdminHash(): AdminRoute {
   }
   if (hash.startsWith('#/admin/productos')) return { view: 'productos' }
   if (hash.startsWith('#/admin/importar')) return { view: 'importar' }
+  if (hash.startsWith('#/admin/contacto')) return { view: 'contacto' }
   return { view: 'dashboard' }
 }
 
@@ -97,7 +101,7 @@ function AdminDashboard() {
           Panel de administración
         </h1>
         <p className="mt-2 text-ink/80">
-          Gestione productos y fotos de la tienda. Todo cambio se publica solo.
+          Gestione productos, fotos y canales de contacto de la tienda. Todo cambio se publica solo.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <a
@@ -125,6 +129,15 @@ function AdminDashboard() {
             <h2 className="font-display text-lg text-brand-deep">Importar productos</h2>
             <p className="mt-1 text-sm text-ink/80">
               Cargue varias piezas a la vez desde una planilla (Excel/CSV), con fotos por URL.
+            </p>
+          </a>
+          <a
+            href="#/admin/contacto"
+            className="rounded-xl border border-brand-primary/15 bg-white/60 p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-primary/10 motion-reduce:transform-none motion-reduce:transition-none"
+          >
+            <h2 className="font-display text-lg text-brand-deep">Contacto</h2>
+            <p className="mt-1 text-sm text-ink/80">
+              Gestione los canales de contacto que se muestran en la tienda.
             </p>
           </a>
           <a
@@ -189,6 +202,7 @@ function AdminPanel() {
           {navLink('#/admin/productos', 'Productos', route.view === 'productos')}
           {navLink('#/admin/productos/nuevo', 'Nuevo producto', route.view === 'nuevo')}
           {navLink('#/admin/importar', 'Importar', route.view === 'importar')}
+          {navLink('#/admin/contacto', 'Contacto', route.view === 'contacto')}
         </nav>
       </header>
       <main className="flex-1">
@@ -200,6 +214,8 @@ function AdminPanel() {
           <ProductForm mode="edit" productId={route.id} />
         ) : route.view === 'importar' ? (
           <ImportProducts />
+        ) : route.view === 'contacto' ? (
+          <ContactChannelsManager />
         ) : (
           <AdminDashboard />
         )}
