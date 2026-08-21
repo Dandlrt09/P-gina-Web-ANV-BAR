@@ -1,16 +1,18 @@
 # ANV·BAR Web
 
-Sitio web estático de marca para **ANV·BAR**, moda femenina hecha a mano (Colombia). Sin backend, sin carrito y sin pasarela de pago: catálogo, fichas de producto y pedidos por WhatsApp en texto.
+Tienda web de marca para **ANV·BAR**, moda femenina hecha a mano (Colombia). Sin carrito y sin pasarela de pago: catálogo en vivo, fichas de producto y pedidos por WhatsApp en texto. Incluye un panel de administración privado para gestionar el catálogo.
 
 ## Stack
 
 - Vite 8 + React 19 + TypeScript
-- Tailwind CSS v4 (tokens de diseño en `@theme`, dentro de `src/index.css`)
+- Tailwind CSS v4 (tokens de diseño en `@theme`, dentro de `src/app/index.css`)
+- Supabase: catálogo de productos en vivo (Postgres + Auth + Storage)
 - Fuentes bundleadas localmente (Fontsource): Fraunces Variable (títulos) + Manrope (texto)
 
 ## Requisitos
 
-- Node.js 20 o superior (desarrollado y probado con Node 26)
+- Node.js 20 o superior
+- Un archivo `.env` con las variables de Supabase (ver más abajo)
 
 ## Comandos
 
@@ -20,106 +22,61 @@ npm run dev       # servidor de desarrollo (recarga en caliente)
 npm run build     # typecheck + build de producción (dist/)
 npm run preview   # sirve el build de producción localmente
 npm run lint      # revisa el código (oxlint)
+npm run seed      # siembra productos y categorías desde content/products hacia Supabase
 ```
 
 ## Estructura
 
+La organización sigue arquitectura *screaming*: las carpetas gritan qué hace el negocio, no qué framework usa.
+
 ```
 src/
-  data/catalog.ts      # fuente única del catálogo (productos, testimonios, perfil)
-  data/contact.ts      # canales de contacto oficiales
-  components/          # componentes de interfaz (NO editar contenido aquí)
-  lib/whatsapp.ts      # número de WhatsApp de pedidos (solo texto, sin llamadas)
-  lib/likes-storage.ts # persistencia de favoritos (localStorage)
-  index.css            # tokens de marca: paleta y tipografías
+  app/          # arranque: App (rutas por hash + gate del catálogo), main, tokens CSS
+  catalog/      # EL corazón: tipos y mapeo de productos, contexto de carga,
+                # tarjetas, grilla, ficha, galería, quick view, destacados
+  favorites/    # página de favoritos + persistencia de likes (localStorage)
+  reviews/      # reseñas de clientas (sección + wizard + storage local)
+  storefront/   # secciones públicas: Nav, Hero, TrustBar, Designer,
+                # Exclusivity, Testimonials, Contact, Footer, canales, WhatsApp
+  chat/         # widget flotante de chat + cerebro del bot
+  admin/        # panel privado (#/admin): login, CRUD de productos, importación,
+                # recuperación de contraseña, auth
+  shared/       # primitivas transversales: Container, Reveal, cliente Supabase
+content/        # contenido editable en build (testimonios, diseñadora, contacto,
+                # categorías) + fuente del seed (content/products/*.json)
+supabase/       # migraciones SQL, políticas RLS, verificaciones y seed
+public/imagenes/  # fotos locales referenciadas por los JSON del seed
 ```
 
----
+## Flujo de datos
 
-## Guía de reemplazo de contenido
+- **Productos y categorías**: se leen EN VIVO desde Supabase al iniciar la app. Un gate de pantalla completa bloquea el render hasta que la carga termina (con estado de error y reintento).
+- **Testimonios, perfil de la diseñadora y contacto**: se cargan en build desde `content/testimonials.json`, `content/designer.json` y `content/contact.json`. Aceptan arreglo raíz o objeto envuelto.
+- **Categorías**: son contrato de presentación. La tupla canónica vive en `src/catalog/catalog.ts`; el seed valida que la base coincida.
+- **Seed**: `npm run seed` toma cada `content/products/*.json`, sube sus fotos al bucket de Storage y crea las filas en Postgres.
 
-Toda la información del sitio (productos, precios, colores, testimonios, perfil de la diseñadora y contacto) se edita **solo en los archivos de datos**. No hace falta tocar componentes ni código de interfaz.
+## Panel de administración
 
-### 1. Productos, precios y colores — `src/data/catalog.ts`
+Ruta `#/admin` dentro de la misma SPA:
 
-Cada producto es un objeto dentro de `PRODUCTS`:
+- Login con email/contraseña vía Supabase Auth; acceso restringido por una allowlist SQL (`is_admin()`) que media TODAS las políticas de escritura en RLS.
+- CRUD completo de productos con subida de fotos a Storage, importación masiva desde planilla y generación automática de slug.
 
-```ts
-{
-  id: 'vestido-rubra-nocturno',     // identificador único (no repetir)
-  name: 'Vestido RUBRA Nocturno',   // nombre visible
-  category: 'Vestidos',             // una de las 7 categorías (ver abajo)
-  priceCOP: 320000,                 // precio en pesos, SOLO entero
-  colors: [
-    { name: 'Burdeo', hex: '#58232c', image: { label: 'Vestido RUBRA Nocturno — Burdeo' } },
-  ],
-  sizes: ['S', 'M', 'L'],           // tallas disponibles ('Único' para accesorios)
-  fabric: 'Gasa de seda',           // tela (se muestra en la ficha)
-  care: 'Lavar a mano con agua fría.', // cuidados
-  editorial: 'Texto de la pieza...', // voz editorial de la ficha
-}
-```
+## Variables de entorno
 
-- **Categorías** disponibles (orden de aparición en la página): `Vestidos`, `Conjuntos`, `Camisas`, `Faldas`, `Pantalones`, `Sets`, `Accesorios`.
-- **Precios**: siempre enteros, sin decimales ni puntos. `250000` se muestra como `$250.000`.
-- **Colores**: `name` es el nombre visible; `hex` es el color exacto del selector. Puedes usar los colores de marca (`#58232c` burdeo, `#390f12` burdeo profundo, `#8c6d51` dorado, `#000000` negro, `#f3f2ef` marfil) u otros que representen la prenda real.
-- **Fotos**: coloca la imagen dentro de la carpeta `public/` del proyecto y escribe su ruta en `src` — por ejemplo `src: '/vestido-burdeo.jpg'`. Mientras `src` esté vacío, el sitio muestra un placeholder tipográfico elegante con el texto de `label`, así que el sitio funciona perfectamente sin fotos.
-- **Badges**: por defecto todo producto muestra “Bajo pedido 3-5 días”. No se usan ofertas ni descuentos.
+Copia `.env.example` a `.env` y completa:
 
-### 2. Testimonios — `src/data/catalog.ts`
+| Variable | Uso |
+|---|---|
+| `VITE_SUPABASE_URL` | URL del proyecto (va al bundle) |
+| `VITE_SUPABASE_ANON_KEY` | clave anónima (pública por diseño; RLS es la barrera) |
+| `SUPABASE_SERVICE_ROLE_KEY` | solo para `npm run seed`; NUNCA con prefijo `VITE_`, nunca se commitea |
 
-Dentro de `TESTIMONIALS`:
+## Convenciones de dominio
 
-```ts
-{ name: 'Valentina R.', city: 'Barranquilla', text: 'El vestido llegó en el tiempo prometido...' }
-```
-
-- `name` es el nombre que se muestra (puede ser “Clienta ANV·BAR” si prefiere anonimato).
-- `city` es opcional: si se omite, no aparece la ciudad.
-- `text` es el testimonio.
-
-### 3. Perfil de la diseñadora — `src/data/catalog.ts`
-
-Dentro de `DESIGNER`:
-
-```ts
-{
-  name: 'Anays Vargas',
-  role: 'Diseñadora y fundadora de ANV·BAR',
-  bio: 'Creadora caribeña...',
-  collection: { name: 'RUBRA', story: 'La historia de la colección...' },
-  claim: 'Donde la ligereza se convierte en elegancia',
-}
-```
-
-- `claim` es la frase de marca: se mantiene en su idioma original.
-- Al actualizar `bio`, `collection.story` o `name`, la sección “La diseñadora” cambia automáticamente, sin tocar código.
-
-### 4. Contacto — `src/data/contact.ts`
-
-Cada canal es un objeto de `CONTACT_CHANNELS`:
-
-```ts
-{ label: 'WhatsApp', handle: '3186424021', href: 'https://wa.me/573186424021', note: 'Pedidos por mensaje de texto, sin llamadas' }
-```
-
-- `handle` es el texto visible; `href` es el enlace; `note` es opcional.
-- El número de WhatsApp en los enlaces usa formato internacional **E.164**: `573186424021` (prefijo `+57` + número). Si algún día cambia el número, actualízalo aquí **y también** en `src/lib/whatsapp.ts` (allí vive el número de los pedidos).
-- El sitio nunca ofrece llamadas: solo mensajes de texto.
-
-### 5. Lo que no debe editarse
-
-- `src/components/` — componentes de interfaz; el contenido vive en los archivos de datos.
-- `src/index.css` — tokens de marca (paleta y tipografías).
-- `src/lib/whatsapp.ts` — lógica de pedidos; solo se toca si cambia el número de WhatsApp.
-
-### 6. Después de cada cambio
-
-```bash
-npm run build   # verifica que todo compile y genera dist/
-```
-
-Si el servidor de desarrollo (`npm run dev`) está corriendo, los cambios se reflejan solos al guardar.
+- Precios SIEMPRE enteros en COP sin decimales ni puntos: `250000` se muestra como `$250.000`.
+- Sin ofertas ni descuentos: nunca aparecen badges de SALE; el badge estándar es "Bajo pedido 3-5 días".
+- Pedidos solo por WhatsApp texto (formato E.164 `573186424021`); el sitio nunca ofrece llamadas.
 
 ---
 
