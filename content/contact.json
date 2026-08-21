@@ -1,4 +1,5 @@
 {
+  "_comment": "Live source: Supabase table contact_channels (manage at #/admin/contacto). This bundled file is the fallback source of record.",
   "contact": [
     {
       "label": "WhatsApp",
@@ -17,9 +18,10 @@
       "href": "https://www.facebook.com/marketplace"
     },
     {
-      "label": "Diseñadora",
+      "label": "Instagram",
       "handle": "@anysval_",
-      "href": "https://www.instagram.com/anysval_"
+      "href": "https://www.instagram.com/anysval_",
+      "note": "Instagram personal de la diseñadora."
     }
   ]
 }

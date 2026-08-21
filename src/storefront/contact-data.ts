@@ -1,10 +1,14 @@
 /**
- * ANV·BAR — Canales de contacto oficiales (fuente única, verificable en
- * harness node). Handles exactos exigidos por el spec contact.
+ * ANV·BAR — Bundled contact channels (static fallback).
  *
- * Los valores se cargan desde content/contact.json (editable desde el admin).
- * El archivo admite un arreglo raíz o un objeto con la clave "contact" (la
- * forma que usa Decap CMS al guardar file collections).
+ * LIVE SOURCE: the public.contact_channels table in Supabase, managed from
+ * the admin panel (#/admin/contacto) and loaded once per page by
+ * src/catalog/contactChannels.ts. This module keeps the strict load of
+ * content/contact.json and is ONLY the fallback used when that DB read fails
+ * or comes back empty; the JSON file stays the fallback source of record.
+ *
+ * The file accepts a root array or an object with the "contact" key (the
+ * shape Decap CMS writes for file collections).
  */
 
 export type ContactChannel = {
