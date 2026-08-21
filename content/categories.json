@@ -1,9 +1,11 @@
-[
-  "Vestidos",
-  "Conjuntos",
-  "Camisas",
-  "Faldas",
-  "Pantalones",
-  "Sets",
-  "Accesorios"
-]
+{
+  "categories": [
+    "Vestidos",
+    "Conjuntos",
+    "Camisas",
+    "Faldas",
+    "Pantalones",
+    "Sets",
+    "Accesorios"
+  ]
+}
