@@ -66,15 +66,11 @@ begin
 end $$;
 
 -- ------------------------------------------------------------------------
--- Allowlisted-session SUCCESS path — manual, browser (SQL editor has no JWT):
---   1) Sign in at #/admin with danieldelosriost@gmail.com.
---   2) Until the admin UI ships (PR-B), verify from the browser console with
---      the signed-in client:
---        supabase.from('contact_channels').update({ label: 'WhatsApp test' })
---          .eq('label', 'WhatsApp').select()
---      -> must return the edited row (authenticated + is_admin() true).
---   3) Revert the label afterwards:
---        supabase.from('contact_channels').update({ label: 'WhatsApp' })
---          .eq('handle', '3186424021')
+-- Allowlisted-session SUCCESS path — manual, in-app (SQL editor has no JWT):
+--   Since PR-B this write path is verified END-TO-END by the admin Contacto
+--   UI: sign in at #/admin with the allowlisted account, open #/admin/
+--   contacto, edit a channel (e.g. relabel WhatsApp), confirm it persists,
+--   then revert it. Every mutation goes through the same anon client and RLS
+--   policies checked above, gated on public.is_admin().
 --   Any OTHER account gets 0 rows / an RLS denial in the network tab.
 -- ------------------------------------------------------------------------

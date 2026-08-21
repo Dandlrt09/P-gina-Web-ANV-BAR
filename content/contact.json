@@ -1,4 +1,5 @@
 {
+  "_comment": "Live source: Supabase table contact_channels (manage at #/admin/contacto). This bundled file is the fallback source of record.",
   "contact": [
     {
       "label": "WhatsApp",

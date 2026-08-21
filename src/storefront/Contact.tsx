@@ -1,12 +1,30 @@
+import { useEffect, useState } from 'react'
 import { Container } from '../shared/Container'
-import { CONTACT_CHANNELS } from './contact-data'
+import { ensureContactChannelsLoaded, getContactChannels } from '../catalog/contactChannels'
 
 /**
- * Sección de contacto: los cuatro canales oficiales de la marca
- * (WhatsApp texto 3186424021, Instagram @anv.bar_av, Facebook Marketplace
- * y la diseñadora @anysval_), renderizados desde src/storefront/contact-data.ts.
+ * Contact section: the brand's official channels (WhatsApp text orders,
+ * Instagram, Facebook Marketplace and the designer). Channels come from the
+ * shared singleton in src/catalog/contactChannels.ts — fetched once per page
+ * load from Supabase (managed at #/admin/contacto) with the bundled
+ * content/contact.json as fallback — so the first paint already has content
+ * while the DB read is in flight.
  */
 export function Contact() {
+  const [channels, setChannels] = useState(getContactChannels)
+
+  // Refresh from the singleton once the single DB read settles; while DB rows
+  // match the bundled seed this swap renders identical output.
+  useEffect(() => {
+    let active = true
+    void ensureContactChannelsLoaded().then(() => {
+      if (active) setChannels(getContactChannels())
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+
   return (
     <section id="contacto" className="scroll-mt-20 border-t border-brand-primary/10 bg-white/40">
       <Container className="py-14 sm:py-20">
@@ -16,8 +34,8 @@ export function Contact() {
         </h2>
         <p className="mt-3 max-w-xl text-ink/80">Escríbenos por el canal que prefieras. Todos los pedidos se tramitan por WhatsApp en texto, sin llamadas.</p>
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {CONTACT_CHANNELS.map((channel) => (
-            <li key={channel.handle}>
+          {channels.map((channel) => (
+            <li key={`${channel.label}·${channel.href}`}>
               <a
                 href={channel.href}
                 target="_blank"
