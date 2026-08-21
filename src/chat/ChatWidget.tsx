@@ -1,4 +1,5 @@
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react'
+import { ensureContactChannelsLoaded } from '../catalog/contactChannels'
 import { answerFor } from './chatbot'
 
 type ChatMessage = {
@@ -46,7 +47,9 @@ function SendIcon() {
 
 /**
  * Floating rules-based chat widget. Mounts once in the shop root so it floats
- * above every view. No backend: answers come from the local rule engine.
+ * above every view. Answers come from the local rule engine; contact-channel
+ * data hydrates from Supabase through the shared catalog singleton so the
+ * chat always reflects the owner's panel edits.
  */
 export function ChatWidget() {
   const [open, setOpen] = useState(false)
@@ -60,6 +63,12 @@ export function ChatWidget() {
   const listRef = useRef<HTMLDivElement>(null)
   const timersRef = useRef<number[]>([])
   const pendingRepliesRef = useRef(0)
+
+  // Warm the channels singleton on mount so DB-fresh contact data is in
+  // place before the visitor asks anything (bundled JSON serves meanwhile).
+  useEffect(() => {
+    void ensureContactChannelsLoaded()
+  }, [])
 
   const appendMessage = (message: Omit<ChatMessage, 'id'>) => {
     setMessages((prev) => [...prev, { ...message, id: nextIdRef.current++ }])
