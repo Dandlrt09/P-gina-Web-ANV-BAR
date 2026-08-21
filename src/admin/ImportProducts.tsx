@@ -111,7 +111,7 @@ export function ImportProducts() {
           Importar productos
         </h1>
         <p className="mt-2 max-w-2xl text-ink/80">
-          Subí tu planilla de Excel o pegala como texto. Un producto por fila; el identificador se
+          Suba su planilla de Excel o péguela como texto. Un producto por fila; el identificador se
           genera solo desde el nombre. Las imágenes van como URL pública por variante (opcional:
           sin URL se ve un placeholder hasta subir la foto desde el formulario).
         </p>
@@ -163,7 +163,7 @@ export function ImportProducts() {
           <p className="mt-2 text-xs text-ink/60">
             Solo precio, descripción (columna «editorial»), tela, cuidados, tallas y variantes son
             obligatorias. «es_nuevo» acepta si/no (default no); «orden» es opcional. El precio
-            tolera formato de moneda («$420.000»); si tu planilla no tiene fila de encabezados, las
+            tolera formato de moneda («$420.000»); si su planilla no tiene fila de encabezados, las
             columnas deben seguir el orden de arriba.
           </p>
         </div>
@@ -198,7 +198,7 @@ export function ImportProducts() {
           )}
           {rows && validCount === 0 && (
             <p className="text-sm font-medium text-brand-deep">
-              Corregí los errores para poder importar.
+              Corrija los errores para poder importar.
             </p>
           )}
         </div>

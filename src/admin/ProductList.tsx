@@ -117,7 +117,7 @@ export function ProductList() {
           <div className="mt-10 rounded-xl border border-brand-primary/15 bg-white/60 p-8 text-center">
             <p className="font-display text-lg text-brand-deep">Aún no hay productos</p>
             <p className="mt-1 text-sm text-ink/80">
-              Creá la primera pieza y aparecerá en la tienda en el próximo fetch.
+              Cree la primera pieza y aparecerá en la tienda en el próximo fetch.
             </p>
             <a
               href="#/admin/productos/nuevo"

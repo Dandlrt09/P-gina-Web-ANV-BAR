@@ -276,7 +276,7 @@ export function parseImportTable(text: string, existingIds: ReadonlySet<string>)
       issues.push({
         field: 'colors',
         message:
-          'Variantes — formato esperado por variante: Nombre #hex [https://foto] (ej. Marfil #F5E6C8 https://…). Separalas con «;».',
+          'Variantes — formato esperado por variante: Nombre #hex [https://foto] (ej. Marfil #F5E6C8 https://…). Sepárelas con «;».',
       })
     }
 

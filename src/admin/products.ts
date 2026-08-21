@@ -97,10 +97,10 @@ export function validateProductInput(input: AdminProductInput): ValidationIssue[
     issues.push({ field: 'care', message: 'Cuidados — son obligatorios.' })
   }
   if (input.sizes.length === 0) {
-    issues.push({ field: 'sizes', message: 'Tallas — agregá al menos una (ej. S, M, L).' })
+    issues.push({ field: 'sizes', message: 'Tallas — agregue al menos una (ej. S, M, L).' })
   }
   if (input.colors.length === 0) {
-    issues.push({ field: 'colors', message: 'Variantes de color — agregá al menos una variante.' })
+    issues.push({ field: 'colors', message: 'Variantes de color — agregue al menos una variante.' })
   }
   input.colors.forEach((color, index) => {
     if (color.name.trim() === '') {
@@ -118,7 +118,7 @@ export function validateProductInput(input: AdminProductInput): ValidationIssue[
     if (color.image && color.image.label.trim() === '') {
       issues.push({
         field: `colors.${index}.image.label`,
-        message: `Variante ${index + 1} — Foto: subí una imagen o quitá el texto pendiente.`,
+        message: `Variante ${index + 1} — Foto: suba una imagen o quite el texto pendiente.`,
       })
     }
   })
@@ -240,7 +240,7 @@ export function validateUploadFile(file: File): string | null {
   const ext = `.${file.name.split('.').pop()?.toLowerCase() ?? ''}`
   if (!(ext in EXT_TO_MIME)) return 'Solo se admiten imágenes jpg, png, webp o gif.'
   if (file.type !== '' && !ALLOWED_MIMES.has(file.type)) {
-    return `El archivo "${file.name}" no parece una imagen válida. Usá jpg, png, webp o gif.`
+    return `El archivo "${file.name}" no parece una imagen válida. Use jpg, png, webp o gif.`
   }
   if (file.size > MAX_UPLOAD_BYTES) return 'La imagen supera el límite de 5 MB.'
   return null

@@ -220,7 +220,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
       setIssues([
         {
           field: 'id',
-          message: `Ya existe un producto con el identificador "${draft.id}". Probá con otro o usá "Generar desde el nombre".`,
+          message: `Ya existe un producto con el identificador "${draft.id}". Pruebe con otro o use "Generar desde el nombre".`,
         },
       ])
       return
@@ -283,7 +283,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
         <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-xl border border-brand-primary/25 bg-white/60 p-8 text-center">
             <h1 className="font-display text-2xl font-medium text-brand-deep">No pudimos cargar el producto</h1>
-            <p className="mt-2 text-ink/80">Revisá tu conexión e intentá de nuevo.</p>
+            <p className="mt-2 text-ink/80">Revise su conexión e intente de nuevo.</p>
             <button
               type="button"
               onClick={() => {
@@ -433,7 +433,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                 </div>
                 <span className="text-xs text-ink/60">
                   {mode === 'create' && !idTouched && id !== ''
-                    ? `Automático desde el nombre: ${id}. Podés ajustarlo antes de guardar; no se puede editar después.`
+                    ? `Automático desde el nombre: ${id}. Puede ajustarlo antes de guardar; no se puede editar después.`
                     : 'Minúsculas, números y guiones. Se usa en los enlaces y favoritos; no se puede editar después.'}
                 </span>
               </label>
@@ -472,7 +472,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
               ) : (
                 <span className="text-xs font-medium text-brand-deep">
                   Este producto quedó fuera del catálogo: la categoría «{category}» ya no está en la lista
-                  vigente. Elegí una categoría para que vuelva a aparecer.
+                  vigente. Elija una categoría para que vuelva a aparecer.
                 </span>
               )}
             </label>
@@ -658,7 +658,7 @@ export function ProductForm({ mode, productId }: ProductFormProps) {
                     className={`${inputClass} ${invalidInput(`colors.${index}.image.label`)}`}
                   />
                   <span className="text-xs text-ink/60">
-                    Obligatorio si cargaste o guardaste una foto. Se usa como texto alternativo y placeholder.
+                    Obligatorio si cargó o guardó una foto. Se usa como texto alternativo y placeholder.
                   </span>
                 </label>
 

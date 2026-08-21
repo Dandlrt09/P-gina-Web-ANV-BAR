@@ -59,7 +59,7 @@ export function RecoveryPage() {
         ) : status !== 'ok' ? (
           <>
             <p className="mt-3 text-sm leading-relaxed text-ink/80">
-              Este link de recuperación no es válido o ya fue usado. Pedí uno
+              Este link de recuperación no es válido o ya fue usado. Pida uno
               nuevo desde la pantalla de inicio de sesión.
             </p>
             <a
@@ -72,7 +72,7 @@ export function RecoveryPage() {
         ) : (
           <>
             <p className="mt-3 text-sm text-ink/80">
-              Elegí una contraseña nueva para tu cuenta de administración.
+              Elija una contraseña nueva para su cuenta de administración.
             </p>
             <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-4">
               <label className="flex flex-col gap-1.5 text-sm font-medium text-brand-deep">

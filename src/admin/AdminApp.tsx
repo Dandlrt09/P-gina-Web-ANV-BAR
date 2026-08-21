@@ -97,7 +97,7 @@ function AdminDashboard() {
           Panel de administración
         </h1>
         <p className="mt-2 text-ink/80">
-          Gestioná productos y fotos de la tienda. Los cambios se publican en el próximo fetch del
+          Gestione productos y fotos de la tienda. Los cambios se publican en el próximo fetch del
           catálogo público.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -125,7 +125,7 @@ function AdminDashboard() {
           >
             <h2 className="font-display text-lg text-brand-deep">Importar productos</h2>
             <p className="mt-1 text-sm text-ink/80">
-              Cargá varias piezas de una desde una planilla (Excel/CSV), con fotos por URL.
+              Cargue varias piezas a la vez desde una planilla (Excel/CSV), con fotos por URL.
             </p>
           </a>
           <a

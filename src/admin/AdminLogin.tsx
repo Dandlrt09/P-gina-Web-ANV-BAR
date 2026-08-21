@@ -26,7 +26,7 @@ export function AdminLogin() {
     const result = await signIn(email.trim(), password)
     setSubmitting(false)
     if (result.error) {
-      setError('No pudimos iniciar sesión. Verificá el correo y la contraseña e intentá de nuevo.')
+      setError('No pudimos iniciar sesión. Verifique el correo y la contraseña e intente de nuevo.')
       return
     }
     // auth resolverá solo el gate; aterrizamos en el panel.
@@ -41,7 +41,7 @@ export function AdminLogin() {
     const result = await sendPasswordReset(email.trim() || ADMIN_EMAILS[0])
     setSubmitting(false)
     if (result.error) {
-      setError('No pudimos enviar el link de recuperación. Intentá de nuevo.')
+      setError('No pudimos enviar el link de recuperación. Intente de nuevo.')
       return
     }
     setResetSent(true)
@@ -58,8 +58,8 @@ export function AdminLogin() {
           {resetSent ? (
             <>
               <p className="mt-3 text-sm leading-relaxed text-ink/80">
-                Revisá tu correo: te enviamos un link para crear una contraseña
-                nueva. Si no aparece en unos minutos, mirá la carpeta de spam.
+                Revise su correo: le enviamos un link para crear una contraseña
+                nueva. Si no aparece en unos minutos, revise la carpeta de spam.
               </p>
               <button
                 type="button"
@@ -75,7 +75,7 @@ export function AdminLogin() {
           ) : (
             <>
               <p className="mt-3 text-sm text-ink/80">
-                Te enviamos un link de recuperación por correo.
+                Le enviamos un link de recuperación por correo.
               </p>
               <form onSubmit={handleResetRequest} className="mt-7 flex flex-col gap-4">
                 <label className="flex flex-col gap-1.5 text-sm font-medium text-brand-deep">
@@ -125,7 +125,7 @@ export function AdminLogin() {
           Iniciar sesión
         </h1>
         <p className="mt-3 text-sm text-ink/80">
-          Acceso restringido al equipo de ANV·BAR. Si no tenés permiso, podés volver a la tienda.
+          Acceso restringido al equipo de ANV·BAR. Si no tiene permiso, puede volver a la tienda.
         </p>
         <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-4">
           <label className="flex flex-col gap-1.5 text-sm font-medium text-brand-deep">
@@ -158,7 +158,7 @@ export function AdminLogin() {
             }}
             className="self-end text-sm font-medium text-brand-primary transition-colors hover:text-brand-deep"
           >
-            ¿Olvidaste tu contraseña?
+            ¿Olvidó su contraseña?
           </button>
           {error && (
             <p role="alert" className="text-sm font-medium text-brand-deep">
