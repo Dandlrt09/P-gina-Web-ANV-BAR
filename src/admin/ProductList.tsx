@@ -1,16 +1,49 @@
-import { useCallback, useEffect, useState } from 'react'
-import { CATEGORIES, formatCOP, type Product } from '../catalog/catalog'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  CATEGORIES,
+  compareCatalogOrder,
+  formatCOP,
+  type Product,
+  type ProductCategory,
+} from '../catalog/catalog'
 import { deleteProduct, deleteProductImages, listAdminProducts } from './products'
+
+/** Criterios de orden del listado. El default replica al catálogo público. */
+type SortKey = 'catalogo' | 'nombre' | 'precio-asc' | 'precio-desc'
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'catalogo', label: 'Orden del catálogo' },
+  { value: 'nombre', label: 'Nombre A–Z' },
+  { value: 'precio-asc', label: 'Precio: menor a mayor' },
+  { value: 'precio-desc', label: 'Precio: mayor a menor' },
+]
 
 /**
  * Listado de productos del admin (ruta #/admin/productos).
  * Carga el catálogo desde Supabase y expone editar / eliminar. Al eliminar
  * borra el producto y limpia (best-effort) sus fotos bajo el path del id.
+ * Filtros en cliente (categoría + orden), espejo de los del catálogo público:
+ * el catálogo completo vive en memoria, filtrar acá no toca la red.
  */
 export function ProductList() {
   const [products, setProducts] = useState<Product[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [mutating, setMutating] = useState<string | null>(null)
+  const [categoryFilter, setCategoryFilter] = useState<ProductCategory | 'todas'>('todas')
+  const [sortKey, setSortKey] = useState<SortKey>('catalogo')
+
+  /** Lista visible según filtros; sin filtros es idéntica al fetch original. */
+  const visible = useMemo(() => {
+    const base = products ?? []
+    const filtered =
+      categoryFilter === 'todas' ? base : base.filter((product) => product.category === categoryFilter)
+    const sorted = [...filtered]
+    if (sortKey === 'nombre') sorted.sort((a, b) => a.name.localeCompare(b.name, 'es'))
+    else if (sortKey === 'precio-asc') sorted.sort((a, b) => a.priceCOP - b.priceCOP)
+    else if (sortKey === 'precio-desc') sorted.sort((a, b) => b.priceCOP - a.priceCOP)
+    else sorted.sort(compareCatalogOrder)
+    return sorted
+  }, [products, categoryFilter, sortKey])
 
   const load = useCallback(async () => {
     setLoadError(null)
@@ -95,9 +128,67 @@ export function ProductList() {
           </div>
         )}
 
-        {!loadError && products !== null && products.length > 0 && (
+        {products !== null && products.length > 0 && (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrar por categoría">
+              {(['todas', ...CATEGORIES] as const).map((category) => {
+                const active = categoryFilter === category
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setCategoryFilter(category)}
+                    aria-pressed={active}
+                    className={`rounded-full border px-4 py-1.5 text-sm transition-colors motion-reduce:transition-none ${
+                      active
+                        ? 'border-brand-primary bg-brand-primary text-surface'
+                        : 'border-brand-primary/30 bg-surface text-brand-deep hover:border-brand-primary/60'
+                    }`}
+                  >
+                    {category === 'todas' ? 'Todas' : category}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="flex items-center gap-2">
+              <label htmlFor="admin-sort" className="text-sm text-ink/70">
+                Ordenar
+              </label>
+              <select
+                id="admin-sort"
+                value={sortKey}
+                onChange={(event) => setSortKey(event.target.value as SortKey)}
+                className="rounded-full border border-brand-primary/30 bg-surface px-4 py-1.5 text-sm text-brand-deep outline-none transition-colors focus:border-brand-primary"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs tabular-nums text-ink/60">
+                {visible.length} de {products.length}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {!loadError && products !== null && products.length > 0 && visible.length === 0 && (
+          <div className="mt-10 rounded-xl border border-brand-primary/15 bg-white/60 p-8 text-center">
+            <p className="font-display text-lg text-brand-deep">No hay productos en «{categoryFilter}»</p>
+            <button
+              type="button"
+              onClick={() => setCategoryFilter('todas')}
+              className="mt-5 rounded-full border border-brand-primary/40 px-6 py-2 text-sm font-medium text-brand-deep transition-colors hover:bg-brand-primary/5"
+            >
+              Ver todas las categorías
+            </button>
+          </div>
+        )}
+
+        {!loadError && products !== null && products.length > 0 && visible.length > 0 && (
           <ul className="mt-8 flex flex-col gap-3">
-            {products.map((product) => {
+            {visible.map((product) => {
               const firstColor = product.colors[0]
               return (
                 <li
