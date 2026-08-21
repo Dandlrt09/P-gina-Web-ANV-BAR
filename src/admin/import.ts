@@ -8,13 +8,19 @@ import {
 } from './products'
 
 /**
- * Carga masiva de productos (slice "pégá desde Excel/CSV").
+ * Carga masiva de productos (slice "pegá desde Excel/CSV" + subida de archivo).
  *
  * Formato aceptado (primera fila = encabezados, resto = datos):
  *   nombre;categoria;precio;editorial;tela;cuidados;tallas;variantes;es_nuevo;orden
  * El separador puede ser `;`, `,` o TAB (Excel pega con TAB); se detecta por
- * la primera línea. `variantes` usa `Nombre #hex [https://foto]` separadas por
- * `;`. El identificador (slug) se deriva del nombre rehusando el auto-slug del
+ * la primera línea. Si la primera fila NO parece un encabezado (ninguna celda
+ * matchea un alias conocido), no se descarta: se trata como dato y las columnas
+ * se asumen en el orden canónico de arriba — pegar "en seco" funciona.
+ * `variantes` usa `Nombre #hex [https://foto]` separadas por `;`.
+ * Precio y orden toleran formato humano (`$420.000`, `420 000`): se conservan
+ * solo los dígitos, porque el portapapeles de Excel lleva el texto formateado
+ * de la celda y el dominio exige enteros sin decimales.
+ * El identificador (slug) se deriva del nombre rehusando el auto-slug del
  * form y se resuelve contra los ids existentes + los del propio lote para no
  * colisionar. Cada fila se valida con el MISMO validateProductInput del form,
  * así las reglas (y mensajes) son idénticos a la alta manual.
@@ -48,6 +54,8 @@ const HEADER_ALIASES: Record<string, keyof AdminProductInput> = {
   price_cop: 'priceRaw',
   editorial: 'editorial',
   'texto_editorial': 'editorial',
+  descripcion: 'editorial',
+  description: 'editorial',
   tela: 'fabric',
   fabric: 'fabric',
   cuidados: 'care',
@@ -136,7 +144,9 @@ function parseVariantes(raw: string): ParsedVariantes {
     }
     colors.push({
       name: match[1].trim(),
-      hex: match[2],
+      // Canonical con numeral: validateProductInput exige #rrggbb (igual que
+      // el <input type="color"> del form) y así viaja a colors.jsonb.
+      hex: `#${match[2]}`,
       ...(match[3] ? { image: { src: match[3], label: match[1].trim() } } : {}),
     })
   }
@@ -156,15 +166,24 @@ function parseEsNuevo(raw: string): boolean {
   return value === 'si' || value === 'true' || value === '1' || value === 's' || value === 'yes'
 }
 
+/** Convierte un entero con formato humano (`$420.000`, `420 000`, `1.250.000`)
+ *  al crudo del dominio: conserva solo los dígitos. Vacío/sin dígitos → NaN
+ *  (la validación de abajo lo reporta con su mensaje normal). Los precios son
+ *  SIEMPRE enteros de pesos, así que descartar separadores es seguro. */
+function parseIntLoose(raw: string): number {
+  const digits = raw.replace(/\D+/g, '')
+  return digits === '' ? Number.NaN : Number.parseInt(digits, 10)
+}
+
 /** Convierte una fila cruda (ya mapeada por alias) en AdminProductInput. */
 function buildInput(
   row: Partial<Record<keyof AdminProductInput, string>>,
   slug: string,
 ): { input: AdminProductInput; variantesMalformed: boolean } {
   const priceRaw = (row.priceRaw ?? '').trim()
-  const parsedPrice = Number.parseInt(priceRaw, 10)
+  const parsedPrice = parseIntLoose(priceRaw)
   const sortRaw = (row.sortOrder ?? '').trim()
-  const sortOrder = sortRaw === '' ? null : Number.parseInt(sortRaw, 10)
+  const sortOrder = sortRaw === '' ? null : parseIntLoose(sortRaw)
   const { colors, malformed } = parseVariantes(row.colors ?? '')
 
   return {
@@ -185,6 +204,28 @@ function buildInput(
   }
 }
 
+/** Orden canónico de columnas cuando la planilla viene SIN encabezado:
+ *  exactamente el mismo orden documentado en la ayuda del importador. */
+const CANONICAL_ORDER: (keyof AdminProductInput)[] = [
+  'name',
+  'category',
+  'priceRaw',
+  'editorial',
+  'fabric',
+  'care',
+  'sizes',
+  'colors',
+  'isNew',
+  'sortOrder',
+]
+
+/** ¿La primera fila es un encabezado? Basta con que UNA celda mapee un alias
+ *  conocido (`nombre`, `precio`, `variantes`...). Una fila de datos real casi
+ *  nunca matchea: los nombres de producto no son "Precio" ni "Categoría". */
+function looksLikeHeader(cells: string[]): boolean {
+  return cells.some((cell) => HEADER_ALIASES[normalizeHeader(cell)] !== undefined)
+}
+
 /**
  * Parsea la planilla completa. `existingIds`: ids ya presentes en la base
  * (para resolver slugs únicos). Las filas vacías se ignoran.
@@ -195,7 +236,8 @@ export function parseImportTable(text: string, existingIds: ReadonlySet<string>)
   if (!firstData) return []
 
   const sep = detectSeparator(firstData)
-  let headerCols: string[] = []
+  let headerCols: string[] | null = null
+  let headerDecided = false
   const rows: ImportPreviewRow[] = []
   const usedSlugs = new Set(existingIds)
 
@@ -204,16 +246,20 @@ export function parseImportTable(text: string, existingIds: ReadonlySet<string>)
     if (raw.trim() === '') return
     const cells = splitLine(raw, sep)
 
-    if (headerCols.length === 0) {
-      headerCols = cells.map((cell) => normalizeHeader(cell))
-      return
+    // La decisión de encabezado se toma UNA vez, sobre la primera fila con
+    // contenido. Si no parece encabezado, esa fila ES un dato y las columnas
+    // caen por posición (orden canónico): pegar en seco no pierde productos.
+    if (!headerDecided) {
+      headerDecided = true
+      if (looksLikeHeader(cells)) {
+        headerCols = cells.map((cell) => normalizeHeader(cell))
+        return
+      }
     }
 
     const record: Partial<Record<keyof AdminProductInput, string>> = {}
     cells.forEach((cell, cellIndex) => {
-      const header = headerCols[cellIndex]
-      if (!header) return
-      const key = HEADER_ALIASES[header]
+      const key = headerCols ? HEADER_ALIASES[headerCols[cellIndex]] : CANONICAL_ORDER[cellIndex]
       if (key) record[key] = cell
     })
 

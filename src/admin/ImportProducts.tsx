@@ -10,14 +10,21 @@ import {
 /**
  * Carga masiva de productos (slice "importar desde planilla").
  *
- * Se pega la planilla (CSV/TSV; Excel pega con TAB) con encabezados en la
- * primera fila. El parser deriva el slug desde el nombre, valida CADA fila
- * con las mismas reglas del form y deja previsualizar antes de escribir.
+ * Dos caminos hacia el mismo parser:
+ *  1. Subir un archivo .xlsx/.xls/.csv — se lee en el navegador con SheetJS
+ *     (chunk perezoso, solo carga en el admin) y se serializa a TSV. Leer el
+ *     ARCHIVO toma los valores crudos de las celdas: el precio llega como
+ *     número limpio aunque Excel lo muestre como $420.000.
+ *  2. Pegar la planilla como texto (Excel copia con TAB).
+ * El parser deriva el slug desde el nombre, detecta si la primera fila es o no
+ * encabezado (sin encabezado asume el orden canónico de columnas), valida CADA
+ * fila con las mismas reglas del form y deja previsualizar antes de escribir.
  * Load: solo se importan las filas sin errores; las fallidas se reportan
  * línea por línea sin abortar el lote.
  */
 export function ImportProducts() {
   const [text, setText] = useState('')
+  const [fileName, setFileName] = useState<string | null>(null)
   const [rows, setRows] = useState<ImportPreviewRow[] | null>(null)
   const [parsing, setParsing] = useState(false)
   const [importing, setImporting] = useState(false)
@@ -39,6 +46,42 @@ export function ImportProducts() {
     } finally {
       setParsing(false)
     }
+  }
+
+  /** Lee un .xlsx/.xls/.csv local y lo vuelca al textarea como TSV. La lectura
+   *  del archivo NO toca la red: todo pasa por el mismo pipeline del texto. */
+  const handleFile = async (file: File) => {
+    setError(null)
+    setResult(null)
+    setRows(null)
+    try {
+      const XLSX = await import('xlsx')
+      const workbook = XLSX.read(await file.arrayBuffer())
+      const sheetName = workbook.SheetNames[0]
+      if (!sheetName) throw new Error('El archivo no tiene hojas.')
+      const grid = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName], {
+        header: 1,
+        raw: true,
+        defval: '',
+      })
+      const tsv = grid
+        .map((row) => (Array.isArray(row) ? row.map((cell) => String(cell ?? '').trim()).join('\t') : ''))
+        .join('\n')
+      if (tsv.trim() === '') throw new Error('No encontramos datos en la primera hoja.')
+      setText(tsv)
+      setFileName(file.name)
+    } catch (err) {
+      setFileName(null)
+      setError(err instanceof Error ? err.message : 'No pudimos leer el archivo.')
+    }
+  }
+
+  const handleClear = () => {
+    setText('')
+    setFileName(null)
+    setRows(null)
+    setResult(null)
+    setError(null)
   }
 
   const handleImport = async () => {
@@ -68,10 +111,40 @@ export function ImportProducts() {
           Importar productos
         </h1>
         <p className="mt-2 max-w-2xl text-ink/80">
-          Pegá una planilla (Excel, CSV o texto) con un producto por fila. La primera fila es el
-          encabezado; el identificador se genera solo desde el nombre. Las imágenes van como URL
-          pública por variante.
+          Subí tu planilla de Excel o pegala como texto. Un producto por fila; el identificador se
+          genera solo desde el nombre. Las imágenes van como URL pública por variante (opcional:
+          sin URL se ve un placeholder hasta subir la foto desde el formulario).
         </p>
+
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <label className="cursor-pointer rounded-full border border-brand-primary bg-surface px-6 py-2.5 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-primary hover:text-surface">
+            Subir archivo .xlsx / .csv
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (file) void handleFile(file)
+                // Permite volver a elegir el mismo archivo después de limpiar.
+                event.target.value = ''
+              }}
+            />
+          </label>
+          {fileName && (
+            <span className="inline-flex items-center gap-2 rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-medium text-brand-primary">
+              {fileName}
+              <button
+                type="button"
+                onClick={handleClear}
+                aria-label="Quitar archivo y limpiar"
+                className="text-brand-deep/60 transition-colors hover:text-brand-deep"
+              >
+                ✕
+              </button>
+            </span>
+          )}
+        </div>
 
         <div className="mt-6 rounded-xl border border-brand-primary/15 bg-white/60 p-5 text-sm text-ink/75">
           <p className="font-medium text-brand-deep">Encabezados aceptados</p>
@@ -88,8 +161,10 @@ export function ImportProducts() {
             <span className="text-ink/70">{categories}.</span>
           </p>
           <p className="mt-2 text-xs text-ink/60">
-            Solo precio, editorial, tela, cuidados, tallas y variantes son obligatorias. «es_nuevo»
-            acepta si/no (default no); «orden» es opcional.
+            Solo precio, descripción (columna «editorial»), tela, cuidados, tallas y variantes son
+            obligatorias. «es_nuevo» acepta si/no (default no); «orden» es opcional. El precio
+            tolera formato de moneda («$420.000»); si tu planilla no tiene fila de encabezados, las
+            columnas deben seguir el orden de arriba.
           </p>
         </div>
 
