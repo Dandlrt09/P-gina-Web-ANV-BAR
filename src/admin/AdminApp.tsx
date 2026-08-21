@@ -97,8 +97,7 @@ function AdminDashboard() {
           Panel de administración
         </h1>
         <p className="mt-2 text-ink/80">
-          Gestione productos y fotos de la tienda. Los cambios se publican en el próximo fetch del
-          catálogo público.
+          Gestione productos y fotos de la tienda. Todo cambio se publica solo.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <a

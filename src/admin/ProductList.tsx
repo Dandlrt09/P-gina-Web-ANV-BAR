@@ -81,7 +81,7 @@ export function ProductList() {
           <div>
             <h1 className="font-display text-2xl font-medium text-brand-deep sm:text-3xl">Productos</h1>
             <p className="mt-2 text-ink/80">
-              Los cambios se publican en el catálogo en el próximo fetch (sin commit ni rebuild).
+              Los cambios se publican solos en la tienda: no hay que hacer nada más.
             </p>
           </div>
           <a
@@ -117,7 +117,7 @@ export function ProductList() {
           <div className="mt-10 rounded-xl border border-brand-primary/15 bg-white/60 p-8 text-center">
             <p className="font-display text-lg text-brand-deep">Aún no hay productos</p>
             <p className="mt-1 text-sm text-ink/80">
-              Cree la primera pieza y aparecerá en la tienda en el próximo fetch.
+              Cree la primera pieza y aparecerá en la tienda.
             </p>
             <a
               href="#/admin/productos/nuevo"
