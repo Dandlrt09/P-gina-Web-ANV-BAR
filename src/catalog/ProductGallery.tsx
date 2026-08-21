@@ -171,7 +171,7 @@ export function ProductGallery({
                 Este color aún no tiene fotos
               </span>
               <span className="text-xs text-ink/60">
-                Elegí otro color o cargá fotos desde el admin.
+                Elige otro color para ver más fotos.
               </span>
             </div>
           ) : current?.src ? (
@@ -268,7 +268,7 @@ export function ProductGallery({
             Este color aún no tiene fotos
           </span>
           <span className="text-xs text-ink/60">
-            Elegí otro color o cargá fotos desde el admin.
+            Elige otro color para ver más fotos.
           </span>
         </div>
       ) : current?.src ? (

@@ -36,7 +36,7 @@ export function CatalogError({ onRetry }: { onRetry: () => void }) {
           No pudimos cargar el catálogo
         </h1>
         <p className="mt-4 text-ink/80">
-          Parece que hubo un problema con la conexión. Verifica tu conexión e inténtalo de nuevo.
+          Parece que hubo un problema de conexión. Revisa tu internet e intenta de nuevo.
         </p>
         <button
           type="button"
