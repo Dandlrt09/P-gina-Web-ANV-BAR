@@ -44,6 +44,21 @@ export type ContactChannelInput = {
   sortOrder: number
 }
 
+/**
+ * Preset labels offered by the admin form select. Presentation guidance only,
+ * NOT a constraint: validateContactChannel accepts any non-empty label, and
+ * the manager prepends a stored label missing from this list so legacy rows
+ * (e.g. the original 'Diseñadora' seed) stay visible and editable.
+ */
+export const CHANNEL_LABEL_OPTIONS: string[] = [
+  'WhatsApp',
+  'Instagram',
+  'Facebook Marketplace',
+  'Correo',
+  'TikTok',
+  'Otros',
+]
+
 /* ------------------------------------------------------------------ */
 /* Row mapping                                                        */
 /* ------------------------------------------------------------------ */

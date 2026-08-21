@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import {
+  CHANNEL_LABEL_OPTIONS,
   createChannel,
   deleteChannel,
   listChannels,
@@ -15,19 +16,18 @@ const inputClass =
 const labelClass = 'flex flex-col gap-1.5 text-sm font-medium text-brand-deep'
 
 /**
- * Editable draft of one channel. sortOrder stays as raw text until submit so
- * an invalid value surfaces as a validation issue instead of being coerced
- * (Number('') is 0, which would silently reorder the channel).
+ * Editable draft of one channel. Ordering is fixed by creation order, so the
+ * form carries no sort_order field: the manager assigns max+10 on create and
+ * keeps the stored value on edit (see draftToInput).
  */
 type ChannelDraft = {
   label: string
   handle: string
   href: string
   note: string
-  sortOrder: string
 }
 
-const EMPTY_DRAFT: ChannelDraft = { label: '', handle: '', href: '', note: '', sortOrder: '' }
+const EMPTY_DRAFT: ChannelDraft = { label: '', handle: '', href: '', note: '' }
 
 function draftFrom(channel: ContactChannel): ChannelDraft {
   return {
@@ -35,26 +35,26 @@ function draftFrom(channel: ContactChannel): ChannelDraft {
     handle: channel.handle ?? '',
     href: channel.href,
     note: channel.note ?? '',
-    sortOrder: String(channel.sortOrder),
   }
 }
 
-function draftToInput(draft: ChannelDraft): ContactChannelInput {
-  const rawOrder = draft.sortOrder.trim()
+function draftToInput(draft: ChannelDraft, sortOrder: number): ContactChannelInput {
   return {
     label: draft.label.trim(),
     handle: draft.handle.trim() === '' ? null : draft.handle.trim(),
     href: draft.href.trim(),
     note: draft.note.trim() === '' ? null : draft.note.trim(),
-    // Empty/non-numeric order becomes NaN on purpose: validateContactChannel
-    // rejects it with an explicit message instead of saving a wrong value.
-    sortOrder: rawOrder === '' ? Number.NaN : Number(rawOrder),
+    // Provided by the caller (max+10 on create, stored value on edit): the
+    // form never exposes manual ordering.
+    sortOrder,
   }
 }
 
 type ChannelEditorProps = {
   heading: string
   initial: ChannelDraft
+  /** Assigned by the parent (max+10 on create, stored value on edit). */
+  sortOrder: number
   saving: boolean
   submitLabel: string
   onSave: (input: ContactChannelInput) => Promise<unknown>
@@ -67,7 +67,7 @@ type ChannelEditorProps = {
  * never reaches Supabase) and renders the issues in the same summary style
  * as ProductForm; server errors bubble up to the parent screen.
  */
-function ChannelEditor({ heading, initial, saving, submitLabel, onSave, onCancel }: ChannelEditorProps) {
+function ChannelEditor({ heading, initial, sortOrder, saving, submitLabel, onSave, onCancel }: ChannelEditorProps) {
   const [draft, setDraft] = useState<ChannelDraft>(initial)
   const [issues, setIssues] = useState<ValidationIssue[]>([])
 
@@ -76,10 +76,17 @@ function ChannelEditor({ heading, initial, saving, submitLabel, onSave, onCancel
       ? 'border-red-400 ring-2 ring-red-400/60 focus:border-red-500'
       : ''
 
+  // Legacy labels missing from the preset list (e.g. 'Diseñadora') are
+  // prepended so the stored value always renders and stays selectable.
+  const labelChoices =
+    draft.label.trim() !== '' && !CHANNEL_LABEL_OPTIONS.includes(draft.label.trim())
+      ? [draft.label.trim(), ...CHANNEL_LABEL_OPTIONS]
+      : CHANNEL_LABEL_OPTIONS
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     if (saving) return
-    const input = draftToInput(draft)
+    const input = draftToInput(draft, sortOrder)
     const found = validateContactChannel(input)
     if (found.length > 0) {
       setIssues(found)
@@ -105,26 +112,18 @@ function ChannelEditor({ heading, initial, saving, submitLabel, onSave, onCancel
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={labelClass}>
           Etiqueta
-          <input
-            type="text"
+          <select
             value={draft.label}
             onChange={(e) => setDraft((prev) => ({ ...prev, label: e.target.value }))}
-            placeholder="WhatsApp"
-            maxLength={40}
             className={`${inputClass} ${invalidInput('label')}`}
-          />
-        </label>
-        <label className={labelClass}>
-          Orden
-          <input
-            type="number"
-            min={0}
-            step={1}
-            value={draft.sortOrder}
-            onChange={(e) => setDraft((prev) => ({ ...prev, sortOrder: e.target.value }))}
-            placeholder="0"
-            className={`${inputClass} ${invalidInput('sortOrder')}`}
-          />
+          >
+            {draft.label.trim() === '' && <option value="">Elija el tipo de canal</option>}
+            {labelChoices.map((choice) => (
+              <option key={choice} value={choice}>
+                {choice}
+              </option>
+            ))}
+          </select>
         </label>
         <label className={labelClass}>
           Usuario o cuenta
@@ -236,6 +235,11 @@ export function ContactChannelsManager() {
     setEditingId(null)
   }
 
+  // Fixed creation order: new channels always append at the end (max+10,
+  // first channel starts at 0). No manual ordering is exposed in the UI.
+  const nextSortOrder = () =>
+    (channels ?? []).reduce((max, item) => Math.max(max, item.sortOrder), -1) + 10
+
   const persist = async (action: () => Promise<unknown>) => {
     setSaving(true)
     setActionError(null)
@@ -346,6 +350,7 @@ export function ContactChannelsManager() {
                 <ChannelEditor
                   heading="Nuevo canal"
                   initial={EMPTY_DRAFT}
+                  sortOrder={nextSortOrder()}
                   saving={saving}
                   submitLabel="Crear canal"
                   onSave={(input) => persist(() => createChannel(input))}
@@ -359,6 +364,7 @@ export function ContactChannelsManager() {
                   <ChannelEditor
                     heading={`Editar — ${channel.label}`}
                     initial={draftFrom(channel)}
+                    sortOrder={channel.sortOrder}
                     saving={saving}
                     submitLabel="Guardar cambios"
                     onSave={(input) => persist(() => updateChannel(channel.id, input))}
@@ -373,9 +379,6 @@ export function ContactChannelsManager() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-display text-lg leading-snug text-brand-deep">{channel.label}</h2>
-                      <span className="rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-xs font-medium text-brand-deep">
-                        Orden {channel.sortOrder}
-                      </span>
                     </div>
                     <p className="mt-1 truncate text-sm text-ink/80">
                       {channel.handle ?? channel.label} · {channel.href}
