@@ -38,32 +38,41 @@ function writeLastSeen(): void {
 }
 
 /**
- * "Plin" de dos tonos generado con Web Audio API: sin archivos de audio ni
- * dependencias. Los browsers lo bloquean hasta la primera interacción del
- * usuario — el admin siempre clikea antes (login), así que en la práctica
- * suena; si el contexto está suspendido o el audio no está disponible, se
- * calla sin romper nada.
+ * Contexto de audio compartido, creado UNA vez durante un gesto del usuario.
+ * Los browsers crean el contexto suspendido si nace fuera del stack de un
+ * click (callback de realtime, timers), así que no se instancia ahí: el hook
+ * escucha el primer pointerdown del panel y lo desbloquea en ese momento.
  */
-function playChime(): void {
-  try {
-    const ctx = new AudioContext()
-    if (ctx.state === 'suspended') {
-      void ctx.close()
+let audioCtx: AudioContext | null = null
+
+function ensureAudioContext(): void {
+  if (audioCtx === null) {
+    try {
+      audioCtx = new AudioContext()
+    } catch {
       return
     }
+  }
+  if (audioCtx.state === 'suspended') void audioCtx.resume()
+}
+
+/** "Plin" de dos tonos generado con Web Audio API: sin archivos ni dependencias. */
+function playChime(): void {
+  const ctx = audioCtx
+  if (ctx === null || ctx.state !== 'running') return
+  try {
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.type = 'sine'
     osc.frequency.setValueAtTime(880, ctx.currentTime)
     osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.12)
     gain.gain.setValueAtTime(0.0001, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.02)
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35)
     osc.connect(gain)
     gain.connect(ctx.destination)
     osc.start()
     osc.stop(ctx.currentTime + 0.4)
-    osc.onended = () => void ctx.close()
   } catch {
     /* sin audio disponible: el badge visual ya cubre el aviso */
   }
@@ -71,6 +80,13 @@ function playChime(): void {
 
 export function useNewReviewsBadge() {
   const [pending, setPending] = useState(0)
+
+  // Desbloqueo de audio: el primer click en el panel crea/reanuda el contexto
+  // dentro de un gesto del usuario, habilitando los plins futuros.
+  useEffect(() => {
+    window.addEventListener('pointerdown', ensureAudioContext)
+    return () => window.removeEventListener('pointerdown', ensureAudioContext)
+  }, [])
 
   // Conteo inicial pendiente según el último "visto" persistido.
   useEffect(() => {
