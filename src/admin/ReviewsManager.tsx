@@ -7,6 +7,7 @@ import {
   type ProductReview,
 } from '../reviews/productReviews'
 import { PRODUCTS } from '../catalog/catalog'
+import { createTestimonial } from '../testimonials/testimonials'
 import { supabase } from '../shared/supabase'
 
 const inputClass =
@@ -102,10 +103,11 @@ function ResponseEditor({ review, saving, onSave }: ResponseEditorProps) {
 /**
  * Panel “Comentarios” (ruta #/admin/comentarios): moderación reactiva de las
  * reviews de producto. Lista TODAS las reviews de todos los productos, más
- * reciente primero; permite responder en nombre de ANV·BAR y eliminar filas
- * definitivamente. Toda mutación la autoriza el servidor vía las políticas
- * is_admin() sobre product_reviews; los errores se muestran en línea sin
- * perder la fila afectada ni el texto escrito.
+ * reciente primero; permite responder en nombre de ANV·BAR, publicar una
+ * review como testimonio y eliminar filas definitivamente. Toda mutación la
+ * autoriza el servidor vía las políticas is_admin() sobre product_reviews y
+ * testimonials; los errores se muestran en línea sin perder la fila afectada
+ * ni el texto escrito.
  */
 export function ReviewsManager() {
   const [reviews, setReviews] = useState<ProductReview[] | null>(null)
@@ -114,6 +116,7 @@ export function ReviewsManager() {
   const [savedNote, setSavedNote] = useState<string | null>(null)
   const [respondingId, setRespondingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [convertingId, setConvertingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoadError(null)
@@ -156,7 +159,7 @@ export function ReviewsManager() {
   }, [savedNote])
 
   const handleSaveResponse = async (review: ProductReview, response: string) => {
-    if (respondingId !== null || deletingId !== null) return
+    if (convertingId !== null || respondingId !== null || deletingId !== null) return
     setActionError(null)
     setSavedNote(null)
     setRespondingId(review.id)
@@ -173,7 +176,7 @@ export function ReviewsManager() {
   }
 
   const handleDelete = async (review: ProductReview) => {
-    if (deletingId !== null || respondingId !== null) return
+    if (convertingId !== null || deletingId !== null || respondingId !== null) return
     const who = review.author?.trim() || 'Anónimo'
     if (
       !window.confirm(
@@ -193,6 +196,32 @@ export function ReviewsManager() {
       setActionError(error instanceof Error ? error.message : String(error))
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  // Puente review → testimonio: publica una copia del comentario en la tabla
+  // `testimonials` SIN tocar la fila original (la review sigue listada y
+  // moderable; el diseño lo exige). El fallback "Anónimo" replica el que ya
+  // usa la lista, así el confirm muestra siempre un nombre legible.
+  const handleConvert = async (review: ProductReview) => {
+    if (convertingId !== null || deletingId !== null || respondingId !== null) return
+    const who = review.author?.trim() || 'Anónimo'
+    if (!window.confirm(`¿Publicar el comentario de "${who}" como testimonio?`)) {
+      return
+    }
+    setActionError(null)
+    setSavedNote(null)
+    setConvertingId(review.id)
+    try {
+      await createTestimonial({ name: who, text: review.comment })
+      // Relectura autoritativa de las reviews (la fila no cambió, pero el
+      // refetch confirma que nada se mutó) antes del aviso de éxito.
+      await load()
+      setSavedNote('Testimonio publicado.')
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : String(error))
+    } finally {
+      setConvertingId(null)
     }
   }
 
@@ -283,11 +312,19 @@ export function ReviewsManager() {
                   saving={respondingId === review.id}
                   onSave={(response) => void handleSaveResponse(review, response)}
                 />
-                <div className="mt-4 flex justify-end">
+                <div className="mt-4 flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleConvert(review)}
+                    disabled={convertingId !== null || deletingId !== null || respondingId !== null}
+                    className="rounded-full border border-brand-primary/40 px-4 py-1.5 text-sm font-medium text-brand-deep transition-colors hover:bg-brand-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {convertingId === review.id ? 'Enviando…' : 'Enviar a testimonio'}
+                  </button>
                   <button
                     type="button"
                     onClick={() => void handleDelete(review)}
-                    disabled={deletingId !== null || respondingId !== null}
+                    disabled={convertingId !== null || deletingId !== null || respondingId !== null}
                     className="rounded-full border border-brand-primary/40 px-4 py-1.5 text-sm font-medium text-brand-deep transition-colors hover:bg-brand-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {deletingId === review.id ? 'Eliminando…' : 'Eliminar'}
