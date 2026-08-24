@@ -21,11 +21,6 @@
       }
     }
   ],
-  "featuredImage": {
-    "src": "/imagenes/featured-rubra-nocturno.jpg",
-    "gallery": ["/imagenes/featured-rubra-nocturno-v2.jpg"],
-    "label": "Vestido RUBRA Nocturno — Pieza estrella"
-  },
   "sizes": ["S", "M", "L"],
   "fabric": "Gasa de seda",
   "care": "Lavar a mano con agua fría. Secar a la sombra. No usar blanqueador.",

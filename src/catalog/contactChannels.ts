@@ -81,8 +81,3 @@ export function ensureContactChannelsLoaded(): Promise<ContactChannelsSource> {
 export function getContactChannels(): readonly ContactChannelView[] {
   return channels
 }
-
-/** Source of the current channels: 'db' once loaded from Supabase, else 'fallback'. */
-export function getContactChannelsSource(): ContactChannelsSource {
-  return source
-}
