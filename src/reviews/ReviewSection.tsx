@@ -1,9 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { type Product } from '../catalog/catalog'
-import { loadReviews, type ProductReview } from './reviews-storage'
+import { listProductReviews, type ProductReview } from './productReviews'
+import { supabase } from '../shared/supabase'
 import { ReviewWizard } from './ReviewWizard'
 
 const MAX_RATING = 5
+
+/**
+ * Review que la lista recibe al publicarse. Hoy llega con la forma local del
+ * wizard; cuando el wizard inserte en Supabase llegará la fila devuelta por
+ * la base. Ambas formas satisfacen este contrato estructural.
+ */
+type PublishedReview = Pick<ProductReview, 'id' | 'rating' | 'comment' | 'createdAt'> & {
+  author?: string | null
+}
 
 /** Renderiza la calificación de una review como estrellas ★/☆. */
 function StarRating({ rating }: { rating: number }) {
@@ -34,23 +44,91 @@ type ReviewSectionProps = {
 }
 
 /**
- * Sección "Reviews" de la ficha de producto: lista las reviews guardadas en
- * el dispositivo para este producto (ordenadas por fecha, más reciente
- * primero), muestra un estado vacío amigable y el wizard de 2 pasos para
- * escribir una nueva.
+ * Sección "Reviews" de la ficha de producto: lee las reviews desde Supabase
+ * (más reciente primero), se suscribe al canal realtime del producto para
+ * reflejar inserciones, borrados y respuestas del admin sin recargar, y
+ * muestra el wizard para escribir una nueva.
  */
 export function ReviewSection({ product }: ReviewSectionProps) {
-  const [reviews, setReviews] = useState<ProductReview[]>(() =>
-    loadReviews().filter((review) => review.productId === product.id),
-  )
+  const [reviews, setReviews] = useState<ProductReview[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [failed, setFailed] = useState(false)
+  /** Cambiarlo fuerza la relectura inicial (botón "Reintentar"). */
+  const [reloadToken, setReloadToken] = useState(0)
 
+  useEffect(() => {
+    let alive = true
+    setIsLoading(true)
+
+    // Relectura autoritativa: al montar y ante cualquier evento realtime.
+    // Los payloads DELETE no traen la fila vieja sin REPLICA IDENTITY FULL y
+    // los UPDATE traen la respuesta del admin, así que refrescar cubre
+    // INSERT/UPDATE/DELETE con una sola ruta.
+    const refresh = () => {
+      listProductReviews(product.id)
+        .then((rows) => {
+          if (!alive) return
+          setReviews(rows)
+          setFailed(false)
+        })
+        .catch(() => {
+          if (alive) setFailed(true)
+        })
+        .finally(() => {
+          if (alive) setIsLoading(false)
+        })
+    }
+
+    refresh()
+
+    // Canal por producto: filtrado por product_id y desmontado en el cleanup,
+    // sin listeners huérfanos al salir de la ficha.
+    const channel = supabase
+      .channel(`product-reviews-${product.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'product_reviews',
+          filter: `product_id=eq.${product.id}`,
+        },
+        refresh,
+      )
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') console.warn('[reviews] realtime channel error')
+      })
+
+    return () => {
+      alive = false
+      void supabase.removeChannel(channel)
+    }
+  }, [product.id, reloadToken])
+
+  // La lectura ya llega ordenada (created_at DESC, id DESC); se reordena aquí
+  // solo como defensa para que la publicación optimista respete el contrato.
   const sorted = useMemo(
-    () => [...reviews].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    () =>
+      [...reviews].sort(
+        (a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id),
+      ),
     [reviews],
   )
 
-  const handlePublished = (review: ProductReview) => {
-    setReviews((current) => [review, ...current])
+  /**
+   * Publicación optimista: antepone la review y deduplica por id contra lo ya
+   * listado; la próxima relectura realtime sigue siendo la autoridad.
+   */
+  const handlePublished = (review: PublishedReview) => {
+    setReviews((current) => [
+      { ...review, productId: product.id, author: review.author ?? null, adminResponse: null },
+      ...current.filter((existing) => existing.id !== review.id),
+    ])
+  }
+
+  const retry = () => {
+    setFailed(false)
+    setReloadToken((token) => token + 1)
   }
 
   return (
@@ -69,14 +147,37 @@ export function ReviewSection({ product }: ReviewSectionProps) {
           Reviews
         </h2>
         <p className="mt-3 text-ink/80">
-          Opiniones reales de quienes ya vistieron la pieza. Las reviews se guardan en tu
-          dispositivo y quedan visibles al volver a esta página.
+          Opiniones reales de quienes ya vistieron la pieza. Se publican al instante y quedan
+          visibles para todas las visitas.
         </p>
       </div>
 
       <div className="mt-10 grid items-start gap-10 lg:grid-cols-2">
         <div>
-          {sorted.length === 0 ? (
+          {failed ? (
+            <div className="rounded-xl border border-brand-primary/15 bg-white/60 p-8 text-center">
+              <p className="text-2xl" aria-hidden="true">
+                !
+              </p>
+              <h3 className="mt-3 font-display text-xl font-medium text-brand-deep">
+                No pudimos cargar las reviews
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink/80">
+                Revisa tu conexión e inténtalo de nuevo en un momento.
+              </p>
+              <button
+                type="button"
+                onClick={retry}
+                className="mt-5 inline-flex rounded-full border border-brand-primary/40 px-5 py-2 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-primary hover:text-surface"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : isLoading ? (
+            <p className="text-sm text-ink/60" role="status">
+              Cargando reviews…
+            </p>
+          ) : sorted.length === 0 ? (
             <div className="rounded-xl border border-brand-primary/15 bg-white/60 p-8 text-center">
               <p className="text-2xl" aria-hidden="true">
                 ★
@@ -101,8 +202,18 @@ export function ReviewSection({ product }: ReviewSectionProps) {
                   </div>
                   <p className="mt-3 text-sm leading-relaxed text-ink/85">{review.comment}</p>
                   <p className="mt-3 text-xs font-medium text-brand-deep">
-                    {review.author?.trim() || 'Clienta ANV·BAR'}
+                    {review.author?.trim() || 'Anónimo'}
                   </p>
+                  {review.adminResponse !== null && (
+                    <div className="mt-4 rounded-lg border-l-2 border-brand-primary bg-brand-primary/5 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-brand-deep">
+                        ANV·BAR respondió
+                      </p>
+                      <p className="mt-1 text-sm leading-relaxed text-ink/85">
+                        {review.adminResponse}
+                      </p>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
