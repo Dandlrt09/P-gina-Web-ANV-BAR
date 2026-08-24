@@ -18,7 +18,7 @@
 
 create table public.product_reviews (
   id uuid primary key default gen_random_uuid(),
-  product_id uuid not null references public.products(id) on delete cascade,
+  product_id text not null references public.products(id) on delete cascade,
   rating int not null check (rating between 1 and 5),
   comment text not null check (char_length(comment) between 10 and 1000),
   author text check (char_length(author) <= 60),

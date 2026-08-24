@@ -14,7 +14,7 @@ declare
   v_before bigint;
   v_after bigint;
   v_count bigint;
-  v_product_id uuid;
+  v_product_id text;
   v_review_id uuid;
 begin
   -- --------------------------------------------------------------------
