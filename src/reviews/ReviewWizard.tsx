@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { addReview, type ProductReview } from './reviews-storage'
+import { REVIEW_BOUNDS, submitReview, type ProductReview } from './productReviews'
 
 /**
  * Links de Términos y Condiciones y Política de Privacidad de las reviews.
@@ -8,8 +8,6 @@ import { addReview, type ProductReview } from './reviews-storage'
  */
 export const REVIEW_TERMS_URL = 'https://judge.me/terms'
 export const REVIEW_PRIVACY_URL = 'https://judge.me/privacy'
-
-const MIN_COMMENT_LENGTH = 10
 
 const RATING_PHRASES: Record<number, string> = {
   1: 'No fue para mí',
@@ -21,16 +19,8 @@ const RATING_PHRASES: Record<number, string> = {
 
 type ReviewWizardProps = {
   productId: string
-  /** Recibe la review ya publicada para que la lista la refleje al instante. */
+  /** Recibe la fila que Supabase devolvió para que la lista la refleje al instante. */
   onPublished: (review: ProductReview) => void
-}
-
-/** Genera un ID único con respaldo para entornos sin crypto.randomUUID. */
-function makeReviewId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-  return `review-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 }
 
 /**
@@ -38,8 +28,11 @@ function makeReviewId(): string {
  *  1. Selección de estrellas (1-5) con una frase por nivel.
  *  2. Comentario + nombre/ciudad opcional + Términos y Condiciones + botón
  *     de publicación.
- * Al publicar guarda la review vía addReview (localStorage), muestra un
- * estado de agradecimiento y deja listo el wizard para otra review.
+ * Al publicar inserta la review en Supabase vía submitReview: el estado de
+ * agradecimiento llega solo cuando la base devuelve la fila insertada. La
+ * validación local replica exactamente los CHECKs de product_reviews
+ * (REVIEW_BOUNDS): con datos inválidos no se envía ninguna petición. Si el
+ * envío falla se conservan los valores escritos y se muestra un error inline.
  */
 export function ReviewWizard({ productId, onPublished }: ReviewWizardProps) {
   const [step, setStep] = useState<1 | 2>(1)
@@ -48,8 +41,14 @@ export function ReviewWizard({ productId, onPublished }: ReviewWizardProps) {
   const [author, setAuthor] = useState('')
   const [accepted, setAccepted] = useState(false)
   const [published, setPublished] = useState(false)
+  /** true mientras la inserción está en vuelo (evita dobles envíos). */
+  const [submitting, setSubmitting] = useState(false)
+  /** Error de validación o de envío; null cuando no hay nada que reportar. */
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
-  const commentOk = comment.trim().length >= MIN_COMMENT_LENGTH
+  const commentOk =
+    comment.trim().length >= REVIEW_BOUNDS.minComment &&
+    comment.trim().length <= REVIEW_BOUNDS.maxComment
   const canContinue = rating !== null
   const canPublish = accepted && commentOk
 
@@ -60,22 +59,53 @@ export function ReviewWizard({ productId, onPublished }: ReviewWizardProps) {
     setAuthor('')
     setAccepted(false)
     setPublished(false)
+    setSubmitError(null)
   }
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
-    if (!canPublish || rating === null) return
-    const review: ProductReview = {
-      id: makeReviewId(),
+    if (submitting) return
+
+    // Validación cliente espejo de los CHECKs de la tabla: con datos
+    // inválidos no sale ninguna petición del navegador.
+    if (rating === null || rating < 1 || rating > 5) {
+      setSubmitError('Selecciona una calificación de 1 a 5 estrellas.')
+      return
+    }
+    const trimmedComment = comment.trim()
+    if (trimmedComment.length < REVIEW_BOUNDS.minComment) {
+      setSubmitError(`Tu comentario debe tener al menos ${REVIEW_BOUNDS.minComment} caracteres.`)
+      return
+    }
+    if (trimmedComment.length > REVIEW_BOUNDS.maxComment) {
+      setSubmitError(`Tu comentario no puede superar ${REVIEW_BOUNDS.maxComment} caracteres.`)
+      return
+    }
+
+    setSubmitting(true)
+    setSubmitError(null)
+    // La fila devuelta por Supabase ES la confirmación: hasta entonces no hay
+    // éxito ni entrada publicada en la lista.
+    submitReview({
       productId,
       rating,
-      author: author.trim() || undefined,
-      comment: comment.trim(),
-      createdAt: new Date().toISOString(),
-    }
-    addReview(review)
-    onPublished(review)
-    setPublished(true)
+      comment: trimmedComment,
+      author: author.trim() || null,
+    })
+      .then((review) => {
+        onPublished(review)
+        setPublished(true)
+      })
+      .catch((error: unknown) => {
+        // Fallo de red o de RLS: la fila no existe, así que se conservan los
+        // valores escritos para reintentar sin perder lo tecleado.
+        setSubmitError(
+          error instanceof Error && error.message
+            ? `No pudimos publicar tu review: ${error.message}`
+            : 'No pudimos publicar tu review. Revisa tu conexión e inténtalo de nuevo.',
+        )
+      })
+      .finally(() => setSubmitting(false))
   }
 
   if (published) {
@@ -88,7 +118,7 @@ export function ReviewWizard({ productId, onPublished }: ReviewWizardProps) {
           ¡Gracias por tu review!
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-ink/80">
-          Tu opinión ya aparece en la lista y queda guardada en este dispositivo.
+          Tu opinión ya aparece en la lista y quedó publicada en la tienda.
         </p>
         <button
           type="button"
@@ -167,14 +197,14 @@ export function ReviewWizard({ productId, onPublished }: ReviewWizardProps) {
               value={comment}
               onChange={(event) => setComment(event.target.value)}
               rows={4}
-              maxLength={600}
+              maxLength={REVIEW_BOUNDS.maxComment}
               placeholder="Cuéntanos cómo te quedó, qué tal la tela, el ajuste, la entrega..."
               className="mt-2 w-full rounded-xl border border-brand-primary/20 bg-surface px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-brand-primary"
             />
             <p className="mt-1 text-xs text-ink/60">
               {commentOk
                 ? `${comment.trim().length} caracteres`
-                : `Mínimo ${MIN_COMMENT_LENGTH} caracteres`}
+                : `Mínimo ${REVIEW_BOUNDS.minComment} caracteres`}
             </p>
           </div>
 
@@ -187,7 +217,7 @@ export function ReviewWizard({ productId, onPublished }: ReviewWizardProps) {
               type="text"
               value={author}
               onChange={(event) => setAuthor(event.target.value)}
-              maxLength={60}
+              maxLength={REVIEW_BOUNDS.maxAuthor}
               placeholder="Tu nombre o tu ciudad"
               className="mt-2 w-full rounded-xl border border-brand-primary/20 bg-surface px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-brand-primary"
             />
@@ -226,20 +256,27 @@ export function ReviewWizard({ productId, onPublished }: ReviewWizardProps) {
             </label>
           </div>
 
+          {submitError !== null && (
+            <p role="alert" className="text-sm font-medium text-brand-deep">
+              {submitError}
+            </p>
+          )}
+
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="inline-flex justify-center rounded-full border border-brand-primary/40 px-6 py-3 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-primary hover:text-surface"
+              disabled={submitting}
+              className="inline-flex justify-center rounded-full border border-brand-primary/40 px-6 py-3 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-primary hover:text-surface disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-brand-primary"
             >
               Volver
             </button>
             <button
               type="submit"
-              disabled={!canPublish}
+              disabled={!canPublish || submitting}
               className="inline-flex justify-center rounded-full bg-brand-primary px-6 py-3 text-sm font-medium text-surface transition-colors hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-brand-primary"
             >
-              Publicar review
+              {submitting ? 'Publicando…' : 'Publicar review'}
             </button>
           </div>
         </div>
