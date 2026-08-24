@@ -6,8 +6,8 @@
  * rellena el singleton `PRODUCTS` de este módulo ANTES de que el gate de
  * render lo deje pasar. La interfaz consume `PRODUCTS`/`CATEGORIES` exactamente
  * como antes — este módulo es hoy solo la capa de mapeo (tipos 1:1 con la
- * respuesta de Supabase) junto con testimonios y perfil de la diseñadora, que
- * siguen cargándose en build desde `content/` (Decap CMS).
+ * respuesta de Supabase) junto con el perfil de la diseñadora, que sigue
+ * cargándose en build desde `content/` (Decap CMS).
  *
  * Convenciones del tipo Product:
  *  - priceCOP SIEMPRE en pesos enteros sin decimales (250000 → "$250.000").
@@ -64,15 +64,6 @@ export type Product = {
   /** Orden de presentación en el catálogo (0 primero, 1 después...). Opcional:
    *  si falta, se ordena después de los numerados; los empates por id. */
   sortOrder?: number
-}
-
-export type Testimonial = {
-  /** Nombre de la clienta ("Clienta ANV·BAR" si prefiere anonimato). */
-  name: string
-  /** Ciudad (opcional). */
-  city?: string
-  /** Texto del testimonio en español neutro. */
-  text: string
 }
 
 export type DesignerProfile = {
@@ -197,7 +188,7 @@ export function setCatalogProducts(products: Product[]): void {
 }
 
 /* ------------------------------------------------------------------ */
-/* Testimonios (content/testimonials.json)                             */
+/* Perfil de la diseñadora (content/designer.json)                     */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -211,61 +202,6 @@ function singleContentFile(entries: [string, unknown][], label: string): unknown
   }
   return entries[0][1]
 }
-
-/**
- * Normaliza una lista que puede venir como arreglo raíz del JSON, o como
- * objeto con esa clave (la forma que usa Decap CMS al guardar file
- * collections). Lanza un error claro si el contenido no coincide.
- */
-function listFromJson(raw: unknown, key: string, label: string): unknown[] {
-  const list = Array.isArray(raw)
-    ? raw
-    : typeof raw === 'object' && raw !== null && Array.isArray((raw as Record<string, unknown>)[key])
-      ? ((raw as Record<string, unknown>)[key] as unknown[])
-      : null
-  if (list === null) {
-    throw new Error(
-      `[catalog] El contenido de ${label} debe ser una lista JSON o un objeto con la clave "${key}".`,
-    )
-  }
-  return list
-}
-
-const testimonialsEntries = listFromJson(
-  singleContentFile(
-    Object.entries(
-      import.meta.glob('../../content/testimonials.json', { eager: true, import: 'default' }),
-    ),
-    'content/testimonials.json',
-  ),
-  'testimonials',
-  'content/testimonials.json',
-)
-
-const parsedTestimonials: Testimonial[] = testimonialsEntries.map((item, index) => {
-  if (typeof item !== 'object' || item === null || Array.isArray(item)) {
-    throw new Error(`[catalog] El testimonio #${index + 1} de content/testimonials.json debe ser un objeto.`)
-  }
-  const testimonial = item as Record<string, unknown>
-  const name = testimonial.name
-  const text = testimonial.text
-  if (typeof name !== 'string' || name.trim() === '' || typeof text !== 'string' || text.trim() === '') {
-    throw new Error(
-      `[catalog] El testimonio #${index + 1} necesita "name" y "text" no vacíos (content/testimonials.json).`,
-    )
-  }
-  const parsed: Testimonial = { name, text }
-  if (typeof testimonial.city === 'string' && testimonial.city !== '') {
-    parsed.city = testimonial.city
-  }
-  return parsed
-})
-
-export const TESTIMONIALS: Testimonial[] = parsedTestimonials
-
-/* ------------------------------------------------------------------ */
-/* Perfil de la diseñadora (content/designer.json)                     */
-/* ------------------------------------------------------------------ */
 
 function requiredString(product: Record<string, unknown>, key: string, file: string): string {
   const value = product[key]
