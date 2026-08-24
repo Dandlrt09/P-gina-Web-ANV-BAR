@@ -145,6 +145,15 @@ function AdminDashboard() {
             </p>
           </a>
           <a
+            href="#/admin/comentarios"
+            className="rounded-xl border border-brand-primary/15 bg-white/60 p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-primary/10 motion-reduce:transform-none motion-reduce:transition-none"
+          >
+            <h2 className="font-display text-lg text-brand-deep">Comentarios</h2>
+            <p className="mt-1 text-sm text-ink/80">
+              Revise las reseñas de la tienda: responda o elimine las que no cumplan las normas.
+            </p>
+          </a>
+          <a
             href="#/"
             className="rounded-xl border border-brand-primary/15 bg-white/60 p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-primary/10 motion-reduce:transform-none motion-reduce:transition-none"
           >
