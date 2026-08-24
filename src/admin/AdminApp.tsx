@@ -6,6 +6,7 @@ import { ProductForm } from './ProductForm'
 import { ImportProducts } from './ImportProducts'
 import { ContactChannelsManager } from './ContactChannelsManager'
 import { ReviewsManager } from './ReviewsManager'
+import { TestimonialsManager } from './TestimonialsManager'
 import { useNewReviewsBadge } from './useNewReviewsBadge'
 
 /**
@@ -18,6 +19,7 @@ import { useNewReviewsBadge } from './useNewReviewsBadge'
  *   #/admin/importar                 → spreadsheet bulk import
  *   #/admin/contacto                 → contact channels manager
  *   #/admin/comentarios              → product reviews moderation
+ *   #/admin/testimonios              → testimonials manager
  */
 type AdminRoute =
   | { view: 'dashboard' }
@@ -27,6 +29,7 @@ type AdminRoute =
   | { view: 'importar' }
   | { view: 'contacto' }
   | { view: 'comentarios' }
+  | { view: 'testimonios' }
 
 function routeFromAdminHash(): AdminRoute {
   const hash = window.location.hash
@@ -44,6 +47,7 @@ function routeFromAdminHash(): AdminRoute {
   if (hash.startsWith('#/admin/importar')) return { view: 'importar' }
   if (hash.startsWith('#/admin/contacto')) return { view: 'contacto' }
   if (hash.startsWith('#/admin/comentarios')) return { view: 'comentarios' }
+  if (hash.startsWith('#/admin/testimonios')) return { view: 'testimonios' }
   return { view: 'dashboard' }
 }
 
@@ -162,6 +166,15 @@ function AdminDashboard({ newReviews }: { newReviews: number }) {
             )}
           </a>
           <a
+            href="#/admin/testimonios"
+            className="rounded-xl border border-brand-primary/15 bg-white/60 p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-primary/10 motion-reduce:transform-none motion-reduce:transition-none"
+          >
+            <h2 className="font-display text-lg text-brand-deep">Testimonios</h2>
+            <p className="mt-1 text-sm text-ink/80">
+              Cree, edite o elimine los testimonios de clientas publicados en la tienda.
+            </p>
+          </a>
+          <a
             href="#/"
             className="rounded-xl border border-brand-primary/15 bg-white/60 p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-primary/10 motion-reduce:transform-none motion-reduce:transition-none"
           >
@@ -236,6 +249,7 @@ function AdminPanel() {
           {navLink('#/admin/importar', 'Importar', route.view === 'importar')}
           {navLink('#/admin/contacto', 'Contacto', route.view === 'contacto')}
           {navLink('#/admin/comentarios', 'Comentarios', route.view === 'comentarios', newReviews)}
+          {navLink('#/admin/testimonios', 'Testimonios', route.view === 'testimonios')}
         </nav>
       </header>
       <main className="flex-1">
@@ -251,6 +265,8 @@ function AdminPanel() {
           <ContactChannelsManager />
         ) : route.view === 'comentarios' ? (
           <ReviewsManager />
+        ) : route.view === 'testimonios' ? (
+          <TestimonialsManager />
         ) : (
           <AdminDashboard newReviews={newReviews} />
         )}
