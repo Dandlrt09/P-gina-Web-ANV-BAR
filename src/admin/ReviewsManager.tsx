@@ -7,6 +7,7 @@ import {
   type ProductReview,
 } from '../reviews/productReviews'
 import { PRODUCTS } from '../catalog/catalog'
+import { supabase } from '../shared/supabase'
 
 const inputClass =
   'w-full rounded-lg border border-brand-primary/20 bg-surface px-3 py-2 text-ink outline-none transition-colors focus:border-brand-primary'
@@ -126,6 +127,25 @@ export function ReviewsManager() {
 
   useEffect(() => {
     void load()
+  }, [load])
+
+  // Realtime: cualquier INSERT/UPDATE/DELETE en product_reviews recarga la
+  // lista completa (misma estrategia refetch-on-event de la tienda: los
+  // payloads DELETE no traen la fila vieja sin REPLICA IDENTITY FULL). El
+  // panel refleja comentarios nuevos sin cambiar de pestaña; el canal se
+  // desuscribe al desmontar para no dejar listeners colgados.
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-product-reviews')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'product_reviews' },
+        () => void load(),
+      )
+      .subscribe()
+    return () => {
+      void supabase.removeChannel(channel)
+    }
   }, [load])
 
   // Transient success feedback: the note fades after a moment.
