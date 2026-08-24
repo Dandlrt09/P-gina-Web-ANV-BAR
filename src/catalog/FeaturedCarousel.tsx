@@ -60,7 +60,8 @@ export function FeaturedCarousel({ products, onQuickView, onOpenDetail }: Featur
             </p>
           </div>
 
-          <div className="absolute right-0 top-0 flex gap-2">
+          {products.length > 0 && (
+            <div className="absolute right-0 top-0 flex gap-2">
             <button
               type="button"
               onClick={() => scrollByStep(-1)}
@@ -79,14 +80,26 @@ export function FeaturedCarousel({ products, onQuickView, onOpenDetail }: Featur
             >
               ›
             </button>
-          </div>
+            </div>
+          )}
         </div>
 
-        <div
-          ref={stripRef}
-          onScroll={syncArrows}
-          className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 sm:mt-10"
-        >
+        {products.length === 0 ? (
+          <div className="mt-8 rounded-xl border border-brand-primary/15 bg-white/60 p-8 text-center sm:mt-10">
+            <p aria-hidden="true" className="text-2xl">
+              ✦
+            </p>
+            <p className="font-display text-lg text-brand-deep">Por ahora no hay novedades</p>
+            <p className="mt-1 text-sm text-ink/80">
+              Cuando haya piezas nuevas de la colección, van a aparecer acá primero.
+            </p>
+          </div>
+        ) : (
+          <div
+            ref={stripRef}
+            onScroll={syncArrows}
+            className="no-scrollbar mt-8 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 sm:mt-10"
+          >
           {products.map((product, index) => (
             <div
               key={product.id}
@@ -97,7 +110,8 @@ export function FeaturedCarousel({ products, onQuickView, onOpenDetail }: Featur
               </Reveal>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </Container>
     </section>
   )
