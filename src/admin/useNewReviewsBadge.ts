@@ -37,6 +37,38 @@ function writeLastSeen(): void {
   }
 }
 
+/**
+ * "Plin" de dos tonos generado con Web Audio API: sin archivos de audio ni
+ * dependencias. Los browsers lo bloquean hasta la primera interacción del
+ * usuario — el admin siempre clikea antes (login), así que en la práctica
+ * suena; si el contexto está suspendido o el audio no está disponible, se
+ * calla sin romper nada.
+ */
+function playChime(): void {
+  try {
+    const ctx = new AudioContext()
+    if (ctx.state === 'suspended') {
+      void ctx.close()
+      return
+    }
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(880, ctx.currentTime)
+    osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.12)
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35)
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.4)
+    osc.onended = () => void ctx.close()
+  } catch {
+    /* sin audio disponible: el badge visual ya cubre el aviso */
+  }
+}
+
 export function useNewReviewsBadge() {
   const [pending, setPending] = useState(0)
 
@@ -67,7 +99,10 @@ export function useNewReviewsBadge() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'product_reviews' },
-        () => setPending((count) => count + 1),
+        () => {
+          setPending((count) => count + 1)
+          playChime()
+        },
       )
       .subscribe()
     return () => {
