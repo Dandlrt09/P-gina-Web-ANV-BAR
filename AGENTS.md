@@ -41,7 +41,8 @@ public/imagenes/ # local photos referenced by seed JSONs
 ### Data flow
 
 - **Products & categories**: fetched ONCE from Supabase before any route renders (`CatalogProvider` gate in `src/app/App.tsx`); consumers read the module singleton in `src/catalog/catalog.ts`.
-- **Testimonials / designer profile / contact channels**: loaded at build time from `content/*.json` via `import.meta.glob` with strict runtime validation that throws at startup on malformed data.
+- **Testimonials**: loaded LIVE from Supabase table `testimonials` (RLS public read, admin-write-only) with realtime updates; managed at `#/admin/testimonios`.
+- **Designer profile / contact channels**: loaded at build time from `content/*.json` via `import.meta.glob` with strict runtime validation that throws at startup on malformed data.
 - **Categories** are a presentation contract: canonical tuple lives in `src/catalog/catalog.ts`; the seed validates the database against it.
 - **Reviews and likes** persist client-side only (localStorage).
 
