@@ -6,6 +6,7 @@ import { ProductForm } from './ProductForm'
 import { ImportProducts } from './ImportProducts'
 import { ContactChannelsManager } from './ContactChannelsManager'
 import { ReviewsManager } from './ReviewsManager'
+import { useNewReviewsBadge } from './useNewReviewsBadge'
 
 /**
  * Admin internal routes (hash-based, same conventions as the storefront).
@@ -97,7 +98,7 @@ function AdminDenied() {
   )
 }
 
-function AdminDashboard() {
+function AdminDashboard({ newReviews }: { newReviews: number }) {
   return (
     <section className="py-10 sm:py-14">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -152,6 +153,13 @@ function AdminDashboard() {
             <p className="mt-1 text-sm text-ink/80">
               Revise las reseñas de la tienda: responda o elimine las que no cumplan las normas.
             </p>
+            {newReviews > 0 && (
+              <p className="mt-3 inline-flex items-center rounded-full bg-brand-primary px-2.5 py-1 text-xs font-semibold text-surface">
+                {newReviews === 1
+                  ? '1 comentario nuevo'
+                  : `${newReviews} comentarios nuevos`}
+              </p>
+            )}
           </a>
           <a
             href="#/"
@@ -169,6 +177,7 @@ function AdminDashboard() {
 function AdminPanel() {
   const { email, signOut } = useAuth()
   const [route, setRoute] = useState<AdminRoute>(routeFromAdminHash)
+  const { pending: newReviews, markSeen } = useNewReviewsBadge()
 
   useEffect(() => {
     const onHashChange = () => setRoute(routeFromAdminHash())
@@ -176,19 +185,29 @@ function AdminPanel() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
+  // Entrar a Comentarios marca la lista como vista: el badge vuelve a cero.
+  useEffect(() => {
+    if (route.view === 'comentarios') markSeen()
+  }, [route.view, markSeen])
+
   const handleSignOut = async () => {
     await signOut()
     window.location.hash = '/admin/login'
   }
 
-  const navLink = (href: string, label: string, active: boolean) => (
+  const navLink = (href: string, label: string, active: boolean, badge?: number) => (
     <a
       href={href}
-      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+      className={`inline-flex items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
         active ? 'bg-brand-primary text-surface' : 'text-brand-deep hover:bg-brand-primary/10'
       }`}
     >
       {label}
+      {badge !== undefined && badge > 0 && (
+        <span className="ml-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold leading-none text-surface">
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
     </a>
   )
 
@@ -216,7 +235,7 @@ function AdminPanel() {
           {navLink('#/admin/productos/nuevo', 'Nuevo producto', route.view === 'nuevo')}
           {navLink('#/admin/importar', 'Importar', route.view === 'importar')}
           {navLink('#/admin/contacto', 'Contacto', route.view === 'contacto')}
-          {navLink('#/admin/comentarios', 'Comentarios', route.view === 'comentarios')}
+          {navLink('#/admin/comentarios', 'Comentarios', route.view === 'comentarios', newReviews)}
         </nav>
       </header>
       <main className="flex-1">
@@ -233,7 +252,7 @@ function AdminPanel() {
         ) : route.view === 'comentarios' ? (
           <ReviewsManager />
         ) : (
-          <AdminDashboard />
+          <AdminDashboard newReviews={newReviews} />
         )}
       </main>
       <footer className="border-t border-brand-primary/10 py-6">

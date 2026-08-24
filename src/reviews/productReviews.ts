@@ -90,6 +90,21 @@ export async function listAllReviews(): Promise<ProductReview[]> {
 }
 
 /**
+ * Cantidad de reviews creadas después de un instante dado (ISO). Es la
+ * lectura liviana del aviso de comentarios nuevos del panel admin: count en
+ * el servidor, sin traer filas. Un timestamp null/nunca guardado NO cuenta
+ * todo como nuevo: el hook del badge decide esa política.
+ */
+export async function countReviewsSince(isoTimestamp: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('product_reviews')
+    .select('id', { count: 'exact', head: true })
+    .gt('created_at', isoTimestamp)
+  if (error) throw new Error(error.message)
+  return count ?? 0
+}
+
+/**
  * Inserta la review del visitante y devuelve la fila insertada: recibir la
  * fila ES la prueba de éxito — sin fila no hay confirmación.
  */
