@@ -16,6 +16,7 @@ declare
   v_count bigint;
   v_product_id text;
   v_review_id uuid;
+  v_auth_review_id uuid;
 begin
   -- --------------------------------------------------------------------
   -- 0. Fixture prerequisite: at least one seeded product (FK target).
@@ -61,6 +62,25 @@ begin
   reset role;
 
   -- --------------------------------------------------------------------
+  -- 3.5 Authenticated INSERT also succeeds (signed-in admins share the
+  --     storefront client; policy covers anon AND authenticated).
+  -- --------------------------------------------------------------------
+  set local role authenticated;
+  insert into public.product_reviews (product_id, rating, comment, author)
+  values (
+    v_product_id,
+    4,
+    'Fixture review from an authenticated session — removed at the end.',
+    null
+  )
+  returning id into v_auth_review_id;
+  if v_auth_review_id is null then
+    raise exception 'FAIL — authenticated INSERT returned no id; policy must cover authenticated too.';
+  end if;
+  raise notice 'PASS — authenticated INSERT created fixture review %', v_auth_review_id;
+  reset role;
+
+  -- --------------------------------------------------------------------
   -- 4. Mutations denied WITHOUT allowlist -> 0 rows (RLS). Both roles run
   --    WITHOUT a JWT inside the SQL editor, so public.is_admin() is false
   --    for both.
@@ -97,10 +117,11 @@ begin
   -- 5. Cleanup — runs as the table owner (SQL editor session), which
   --    bypasses RLS by default, leaving no junk rows behind.
   -- --------------------------------------------------------------------
-  delete from public.product_reviews where id = v_review_id;
+  delete from public.product_reviews
+  where id in (v_review_id, v_auth_review_id);
   get diagnostics v_count = row_count;
-  if v_count <> 1 then
-    raise exception 'FAIL — cleanup expected to remove fixture review %; removed %.', v_review_id, v_count;
+  if v_count <> 2 then
+    raise exception 'FAIL — cleanup expected to remove fixture reviews % and %; removed %.', v_review_id, v_auth_review_id, v_count;
   end if;
 
   raise notice '==================================================';
