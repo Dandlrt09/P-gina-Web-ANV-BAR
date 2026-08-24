@@ -5,6 +5,7 @@ import { ProductList } from './ProductList'
 import { ProductForm } from './ProductForm'
 import { ImportProducts } from './ImportProducts'
 import { ContactChannelsManager } from './ContactChannelsManager'
+import { ReviewsManager } from './ReviewsManager'
 
 /**
  * Admin internal routes (hash-based, same conventions as the storefront).
@@ -15,6 +16,7 @@ import { ContactChannelsManager } from './ContactChannelsManager'
  *   #/admin/productos/<id>           → edit product
  *   #/admin/importar                 → spreadsheet bulk import
  *   #/admin/contacto                 → contact channels manager
+ *   #/admin/comentarios              → product reviews moderation
  */
 type AdminRoute =
   | { view: 'dashboard' }
@@ -23,6 +25,7 @@ type AdminRoute =
   | { view: 'producto'; id: string }
   | { view: 'importar' }
   | { view: 'contacto' }
+  | { view: 'comentarios' }
 
 function routeFromAdminHash(): AdminRoute {
   const hash = window.location.hash
@@ -39,6 +42,7 @@ function routeFromAdminHash(): AdminRoute {
   if (hash.startsWith('#/admin/productos')) return { view: 'productos' }
   if (hash.startsWith('#/admin/importar')) return { view: 'importar' }
   if (hash.startsWith('#/admin/contacto')) return { view: 'contacto' }
+  if (hash.startsWith('#/admin/comentarios')) return { view: 'comentarios' }
   return { view: 'dashboard' }
 }
 
@@ -203,6 +207,7 @@ function AdminPanel() {
           {navLink('#/admin/productos/nuevo', 'Nuevo producto', route.view === 'nuevo')}
           {navLink('#/admin/importar', 'Importar', route.view === 'importar')}
           {navLink('#/admin/contacto', 'Contacto', route.view === 'contacto')}
+          {navLink('#/admin/comentarios', 'Comentarios', route.view === 'comentarios')}
         </nav>
       </header>
       <main className="flex-1">
@@ -216,6 +221,8 @@ function AdminPanel() {
           <ImportProducts />
         ) : route.view === 'contacto' ? (
           <ContactChannelsManager />
+        ) : route.view === 'comentarios' ? (
+          <ReviewsManager />
         ) : (
           <AdminDashboard />
         )}

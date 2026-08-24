@@ -75,6 +75,21 @@ export async function listProductReviews(productId: string): Promise<ProductRevi
 }
 
 /**
+ * Todas las reviews de todos los productos, más reciente primero (`created_at`
+ * DESC con `id` DESC como desempate, el mismo criterio del índice). Es la
+ * lectura del panel admin de moderación (#/admin/comentarios).
+ */
+export async function listAllReviews(): Promise<ProductReview[]> {
+  const { data, error } = await supabase
+    .from('product_reviews')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+  if (error) throw new Error(error.message)
+  return (data ?? []).map((row) => mapReviewRow(row as ProductReviewRow))
+}
+
+/**
  * Inserta la review del visitante y devuelve la fila insertada: recibir la
  * fila ES la prueba de éxito — sin fila no hay confirmación.
  */
