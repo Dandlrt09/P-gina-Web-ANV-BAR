@@ -127,6 +127,13 @@ function Shop() {
       ? (PRODUCTS.find((item) => item.id === route.productId) ?? null)
       : null
 
+  // El quick view guarda un snapshot; se resuelve por id en cada render para
+  // que los refrescos realtime del catálogo muestren datos frescos y un
+  // producto borrado simplemente cierre el modal.
+  const quickViewProduct = quickView
+    ? (PRODUCTS.find((item) => item.id === quickView.id) ?? null)
+    : null
+
   const featured = PRODUCTS.filter((p) => p.isNew).sort(compareCatalogOrder)
 
   return (
@@ -170,9 +177,9 @@ function Shop() {
         )}
       </main>
       <Footer />
-      {quickView && (
+      {quickViewProduct && (
         <QuickViewModal
-          product={quickView}
+          product={quickViewProduct}
           onClose={() => setQuickView(null)}
           onOpenDetail={openDetail}
         />

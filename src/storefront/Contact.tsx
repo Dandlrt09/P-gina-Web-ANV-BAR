@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Container } from '../shared/Container'
-import { ensureContactChannelsLoaded, getContactChannels } from '../catalog/contactChannels'
+import {
+  ensureContactChannelsLoaded,
+  getContactChannels,
+  subscribeContactChannels,
+} from '../catalog/contactChannels'
 
 /**
  * Contact section: the brand's official channels (WhatsApp text orders,
@@ -8,20 +12,27 @@ import { ensureContactChannelsLoaded, getContactChannels } from '../catalog/cont
  * shared singleton in src/catalog/contactChannels.ts — fetched once per page
  * load from Supabase (managed at #/admin/contacto) with the bundled
  * content/contact.json as fallback — so the first paint already has content
- * while the DB read is in flight.
+ * while the DB read is in flight, and realtime notifications re-render the
+ * section live when admin edits land.
  */
 export function Contact() {
   const [channels, setChannels] = useState(getContactChannels)
 
   // Refresh from the singleton once the single DB read settles; while DB rows
-  // match the bundled seed this swap renders identical output.
+  // match the bundled seed this swap renders identical output. The realtime
+  // subscription mirrors every singleton swap into local state so INSERTs,
+  // UPDATEs and DELETEs from #/admin/contacto show up without a reload.
   useEffect(() => {
     let active = true
     void ensureContactChannelsLoaded().then(() => {
       if (active) setChannels(getContactChannels())
     })
+    const unsubscribe = subscribeContactChannels(() => {
+      if (active) setChannels(getContactChannels())
+    })
     return () => {
       active = false
+      unsubscribe()
     }
   }, [])
 

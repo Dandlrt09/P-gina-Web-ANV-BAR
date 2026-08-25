@@ -13,6 +13,12 @@ export type CatalogStatus = 'loading' | 'ready' | 'error'
 export type CatalogContextValue = {
   status: CatalogStatus
   retry: () => void
+  /**
+   * Monotonic counter bumped after every successful realtime refetch.
+   * Consumers re-render when it changes; they keep reading the PRODUCTS
+   * singleton directly (its module binding is replaced by setCatalogProducts).
+   */
+  version: number
 }
 
 export const CatalogContext = createContext<CatalogContextValue | null>(null)
@@ -87,4 +93,45 @@ export function ensureCatalogLoaded(): Promise<void> {
     })
   }
   return catalogLoad
+}
+
+/* ------------------------------------------------------------------ */
+/* Realtime sync (products + categories)                               */
+/* ------------------------------------------------------------------ */
+
+/** Monotonic counter bumped after every successful realtime refetch. */
+let catalogVersion = 0
+
+const versionListeners = new Set<() => void>()
+
+export function getCatalogVersion(): number {
+  return catalogVersion
+}
+
+/**
+ * Registers a listener notified after each successful realtime refetch.
+ * Returns the unsubscribe function (provider-side cleanup convention).
+ */
+export function subscribeCatalogVersion(listener: () => void): () => void {
+  versionListeners.add(listener)
+  return () => {
+    versionListeners.delete(listener)
+  }
+}
+
+/**
+ * Background authoritative refetch for realtime events: reuses loadCatalog so
+ * the singleton always reflects one canonical query (same ordering, same
+ * mapping). Unlike the initial gated load it never rejects — a failed refresh
+ * keeps the last good singleton data instead of blanking the rendered store,
+ * so the gate status is untouched after the first successful load.
+ */
+export async function refreshCatalog(): Promise<void> {
+  try {
+    await loadCatalog()
+    catalogVersion += 1
+    versionListeners.forEach((listener) => listener())
+  } catch {
+    // loadCatalog already logged the failure; keep serving last known data.
+  }
 }

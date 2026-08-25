@@ -1,5 +1,8 @@
 import { type KeyboardEvent, useEffect, useRef, useState } from 'react'
-import { ensureContactChannelsLoaded } from '../catalog/contactChannels'
+import {
+  ensureContactChannelsLoaded,
+  subscribeContactChannels,
+} from '../catalog/contactChannels'
 import { answerFor } from './chatbot'
 
 type ChatMessage = {
@@ -66,8 +69,15 @@ export function ChatWidget() {
 
   // Warm the channels singleton on mount so DB-fresh contact data is in
   // place before the visitor asks anything (bundled JSON serves meanwhile).
+  // This widget is mounted on EVERY view while Contact is not (favorites,
+  // product detail), so holding the shared realtime subscription here keeps
+  // the channels live across the whole shop session and every chatbot answer
+  // reads up-to-date rows via getContactChannels(). The tick re-render is
+  // the component's sync point with the refreshed singleton.
+  const [, setChannelsTick] = useState(0)
   useEffect(() => {
     void ensureContactChannelsLoaded()
+    return subscribeContactChannels(() => setChannelsTick((tick) => tick + 1))
   }, [])
 
   const appendMessage = (message: Omit<ChatMessage, 'id'>) => {
