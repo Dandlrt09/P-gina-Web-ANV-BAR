@@ -87,6 +87,21 @@ function Shop() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
+  // Document title follows the route (resolved BEFORE the catalog gate so
+  // this hook stays unconditional). Product tabs show the piece name, which
+  // matters once several tabs or shared links are in play.
+  const titleProduct =
+    route.view === 'product' && route.productId
+      ? (PRODUCTS.find((item) => item.id === route.productId) ?? null)
+      : null
+  useEffect(() => {
+    document.title = titleProduct
+      ? `${titleProduct.name} · ANV·BAR`
+      : route.view === 'favorites'
+        ? 'Tus favoritos · ANV·BAR'
+        : 'ANV·BAR — moda femenina hecha a mano'
+  }, [route.view, titleProduct])
+
   // Gate del catálogo: mientras la carga no termina NO resolvemos rutas.
   // La pantalla de carga (o de error) reemplaza TODO el contenido, así el
   // grid y los vacíos "El catálogo se está vistiendo"/"Próximamente" jamás

@@ -1,0 +1,4 @@
+# ANV·BAR storefront SPA (hash routing): crawlers see one page, allow all.
+User-agent: *
+Allow: /
+Disallow: /#/admin
