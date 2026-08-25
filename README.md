@@ -42,7 +42,7 @@ src/
   admin/        # panel privado (#/admin): login, CRUD de productos, importación,
                 # recuperación de contraseña, auth
   shared/       # primitivas transversales: Container, Reveal, cliente Supabase
-content/        # contenido editable en build (diseñadora, contacto, categorías)
+content/        # respaldos incluidos en el bundle (diseñadora, contacto) + categorías en build
                 # + fuente del seed (content/products/*.json)
 supabase/       # migraciones SQL, políticas RLS, verificaciones y seed
 public/imagenes/  # fotos locales referenciadas por los JSON del seed
@@ -52,7 +52,8 @@ public/imagenes/  # fotos locales referenciadas por los JSON del seed
 
 - **Productos y categorías**: se leen EN VIVO desde Supabase al iniciar la app. Un gate de pantalla completa bloquea el render hasta que la carga termina (con estado de error y reintento).
 - **Testimonios**: se leen EN VIVO desde la tabla `testimonials` de Supabase (lectura pública por RLS, escritura solo para admins) con actualizaciones en tiempo real; se gestionan en `#/admin/testimonios`.
-- **Perfil de la diseñadora y contacto**: se cargan en build desde `content/designer.json` y `content/contact.json`. Aceptan arreglo raíz o objeto envuelto.
+- **Perfil de la diseñadora**: se lee EN VIVO desde la tabla `designer_profile` de Supabase (lectura pública por RLS, edición solo para admins) con actualizaciones en tiempo real; se gestiona en `#/admin/disenadora`. `content/designer.json` queda como respaldo incluido en el bundle.
+- **Canales de contacto**: se leen EN VIVO desde la tabla `contact_channels` con `content/contact.json` como respaldo.
 - **Categorías**: son contrato de presentación. La tupla canónica vive en `src/catalog/catalog.ts`; el seed valida que la base coincida.
 - **Seed**: `npm run seed` toma cada `content/products/*.json`, sube sus fotos al bucket de Storage y crea las filas en Postgres.
 
