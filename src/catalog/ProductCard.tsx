@@ -1,6 +1,7 @@
 import { formatCOP, type Product } from './catalog'
 import { ProductImage } from './ProductImage'
 import { useLikes } from '../favorites/likes'
+import { likeCountLabel, useLikeCount } from '../favorites/useLikeCount'
 
 type ProductCardProps = {
   product: Product
@@ -18,6 +19,7 @@ const ORDER_BADGE = 'Bajo pedido 3-5 días'
 export function ProductCard({ product, onQuickView, onOpenDetail }: ProductCardProps) {
   const { isLiked, toggleLike } = useLikes()
   const liked = isLiked(product.id)
+  const likeCount = useLikeCount(product.id)
   const primary = product.colors[0]
 
   return (
@@ -56,6 +58,14 @@ export function ProductCard({ product, onQuickView, onOpenDetail }: ProductCardP
         >
           ♥
         </button>
+        {likeCount > 0 && (
+          <span className="absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-surface/90 px-2.5 py-1 text-xs font-medium text-brand-deep">
+            <span aria-hidden="true" className="text-brand-primary">
+              ♥
+            </span>
+            {likeCountLabel(likeCount)}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">

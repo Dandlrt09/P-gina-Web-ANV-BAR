@@ -5,6 +5,7 @@ import { ProductGallery } from './ProductGallery'
 import { OrderConfirmBlock } from './OrderConfirmBlock'
 import { buildWhatsAppLink } from '../storefront/whatsapp'
 import { ReviewSection } from '../reviews/ReviewSection'
+import { likeCountLabel, useLikeCount } from '../favorites/useLikeCount'
 
 type ProductDetailProps = {
   product: Product
@@ -31,6 +32,7 @@ export function ProductDetail({ product, onBackToCatalog }: ProductDetailProps) 
   const [size, setSize] = useState(product.sizes[0] ?? 'Único')
   const [quantity, setQuantity] = useState(1)
   const [confirmed, setConfirmed] = useState(false)
+  const likeCount = useLikeCount(product.id)
 
   const color =
     product.colors[Math.min(colorIndex, product.colors.length - 1)] ?? product.colors[0]
@@ -85,6 +87,12 @@ export function ProductDetail({ product, onBackToCatalog }: ProductDetailProps) 
             <p className="mt-3 font-display text-2xl font-medium text-brand-primary sm:text-3xl">
               {formatCOP(product.priceCOP)}
             </p>
+            {likeCount > 0 && (
+              <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-brand-primary">
+                <span aria-hidden="true">♥</span>
+                {likeCountLabel(likeCount)}
+              </p>
+            )}
             <p className="mt-1 text-sm text-brand-primary/80">
               Tu envío está programado: 3 a 5 días máximo
             </p>
