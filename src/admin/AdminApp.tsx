@@ -9,6 +9,8 @@ import { ReviewsManager } from './ReviewsManager'
 import { TestimonialsManager } from './TestimonialsManager'
 import { DesignerProfileManager } from './DesignerProfileManager'
 import { useNewReviewsBadge } from './useNewReviewsBadge'
+import { HelpPage } from './help/HelpPage'
+import { TopLikedProducts } from './TopLikedProducts'
 
 /**
  * Admin internal routes (hash-based, same conventions as the storefront).
@@ -22,6 +24,7 @@ import { useNewReviewsBadge } from './useNewReviewsBadge'
  *   #/admin/comentarios              → product reviews moderation
  *   #/admin/testimonios              → testimonials manager
  *   #/admin/disenadora              → designer profile manager
+ *   #/admin/ayuda                   → full-page help guide (opens in its own tab)
  */
 type AdminRoute =
   | { view: 'dashboard' }
@@ -33,6 +36,7 @@ type AdminRoute =
   | { view: 'comentarios' }
   | { view: 'testimonios' }
   | { view: 'disenadora' }
+  | { view: 'ayuda' }
 
 function routeFromAdminHash(): AdminRoute {
   const hash = window.location.hash
@@ -52,6 +56,7 @@ function routeFromAdminHash(): AdminRoute {
   if (hash.startsWith('#/admin/comentarios')) return { view: 'comentarios' }
   if (hash.startsWith('#/admin/testimonios')) return { view: 'testimonios' }
   if (hash.startsWith('#/admin/disenadora')) return { view: 'disenadora' }
+  if (hash.startsWith('#/admin/ayuda')) return { view: 'ayuda' }
   return { view: 'dashboard' }
 }
 
@@ -195,6 +200,7 @@ function AdminDashboard({ newReviews }: { newReviews: number }) {
             <p className="mt-1 text-sm text-ink/80">Volver al sitio público.</p>
           </a>
         </div>
+        <TopLikedProducts />
       </div>
     </section>
   )
@@ -219,6 +225,12 @@ function AdminPanel() {
   const handleSignOut = async () => {
     await signOut()
     window.location.hash = '/admin/login'
+  }
+
+  // La ayuda vive en su propia pestaña: se abre SIEMPRE con window.open para
+  // que la dueña consulte la guía sin perder el lugar donde estaba trabajando.
+  const openHelp = () => {
+    window.open('#/admin/ayuda', '_blank', 'noopener')
   }
 
   const navLink = (href: string, label: string, active: boolean, badge?: number) => (
@@ -248,6 +260,15 @@ function AdminPanel() {
             <span className="hidden text-ink/70 sm:inline">{email}</span>
             <button
               type="button"
+              onClick={openHelp}
+              title="Abrir la ayuda en una pestaña nueva"
+              aria-label="Abrir la ayuda en una pestaña nueva"
+              className="grid size-9 place-items-center rounded-full border border-brand-primary/40 font-display text-lg font-medium text-brand-deep transition-colors hover:bg-brand-primary/5"
+            >
+              ?
+            </button>
+            <button
+              type="button"
               onClick={handleSignOut}
               className="rounded-full border border-brand-primary/40 px-4 py-1.5 font-medium text-brand-deep transition-colors hover:bg-brand-primary/5"
             >
@@ -255,16 +276,20 @@ function AdminPanel() {
             </button>
           </div>
         </div>
-        <nav className="mx-auto flex w-full max-w-6xl gap-2 overflow-x-auto px-4 pb-3 no-scrollbar sm:px-6 lg:px-8">
-          {navLink('#/admin', 'Panel', route.view === 'dashboard')}
-          {navLink('#/admin/productos', 'Productos', route.view === 'productos')}
-          {navLink('#/admin/productos/nuevo', 'Nuevo producto', route.view === 'nuevo')}
-          {navLink('#/admin/importar', 'Importar', route.view === 'importar')}
-          {navLink('#/admin/contacto', 'Contacto', route.view === 'contacto')}
-          {navLink('#/admin/comentarios', 'Comentarios', route.view === 'comentarios', newReviews)}
-          {navLink('#/admin/testimonios', 'Testimonios', route.view === 'testimonios')}
-          {navLink('#/admin/disenadora', 'Diseñadora', route.view === 'disenadora')}
-        </nav>
+        {/* The help view is a dedicated reading page opened in its own tab:
+            the panel navigation stays out of it on purpose. */}
+        {route.view !== 'ayuda' && (
+          <nav className="mx-auto flex w-full max-w-6xl gap-2 overflow-x-auto px-4 pb-3 no-scrollbar sm:px-6 lg:px-8">
+            {navLink('#/admin', 'Panel', route.view === 'dashboard')}
+            {navLink('#/admin/productos', 'Productos', route.view === 'productos')}
+            {navLink('#/admin/productos/nuevo', 'Nuevo producto', route.view === 'nuevo')}
+            {navLink('#/admin/importar', 'Importar', route.view === 'importar')}
+            {navLink('#/admin/contacto', 'Contacto', route.view === 'contacto')}
+            {navLink('#/admin/comentarios', 'Comentarios', route.view === 'comentarios', newReviews)}
+            {navLink('#/admin/testimonios', 'Testimonios', route.view === 'testimonios')}
+            {navLink('#/admin/disenadora', 'Diseñadora', route.view === 'disenadora')}
+          </nav>
+        )}
       </header>
       <main className="flex-1">
         {route.view === 'productos' ? (
@@ -283,6 +308,8 @@ function AdminPanel() {
           <TestimonialsManager />
         ) : route.view === 'disenadora' ? (
           <DesignerProfileManager />
+        ) : route.view === 'ayuda' ? (
+          <HelpPage />
         ) : (
           <AdminDashboard newReviews={newReviews} />
         )}
