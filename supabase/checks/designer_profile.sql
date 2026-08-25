@@ -45,18 +45,17 @@ begin
   raise notice 'PASS — anon SELECT reads the profile';
 
   -- --------------------------------------------------------------------
-  -- 2. Anonymous UPDATE must FAIL: no anon write policy exists, so RLS
-  --    rejects with insufficient_privilege. Only that denial counts as
-  --    PASS; if the update somehow goes through, the explicit FAIL aborts
-  --    the script loudly.
+  -- 2. Anonymous UPDATE must be denied: with RLS enabled and NO anon update
+  --    policy, Postgres does NOT raise — it silently filters the row, so
+  --    the UPDATE affects 0 rows (same mechanics as step 4). Any row
+  --    touched means the policy surface regressed -> explicit FAIL.
   -- --------------------------------------------------------------------
-  begin
-    update public.designer_profile set claim = 'deny probe' where id = 1;
-    raise exception 'FAIL — anon UPDATE succeeded; updates must be allowlist-only';
-  exception
-    when insufficient_privilege then
-      raise notice 'PASS — anon UPDATE rejected (RLS)';
-  end;
+  update public.designer_profile set claim = 'deny probe' where id = 1;
+  get diagnostics v_count = row_count;
+  if v_count > 0 then
+    raise exception 'FAIL — anon UPDATE touched % row(s); updates must be allowlist-only', v_count;
+  end if;
+  raise notice 'PASS — anon UPDATE affected 0 rows (RLS)';
 
   -- --------------------------------------------------------------------
   -- 3. Anonymous INSERT must FAIL. There is NO insert policy, so the RLS
