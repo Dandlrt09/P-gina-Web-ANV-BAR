@@ -7,6 +7,7 @@ import { ImportProducts } from './ImportProducts'
 import { ContactChannelsManager } from './ContactChannelsManager'
 import { ReviewsManager } from './ReviewsManager'
 import { TestimonialsManager } from './TestimonialsManager'
+import { DesignerProfileManager } from './DesignerProfileManager'
 import { useNewReviewsBadge } from './useNewReviewsBadge'
 
 /**
@@ -20,6 +21,7 @@ import { useNewReviewsBadge } from './useNewReviewsBadge'
  *   #/admin/contacto                 → contact channels manager
  *   #/admin/comentarios              → product reviews moderation
  *   #/admin/testimonios              → testimonials manager
+ *   #/admin/disenadora              → designer profile manager
  */
 type AdminRoute =
   | { view: 'dashboard' }
@@ -30,6 +32,7 @@ type AdminRoute =
   | { view: 'contacto' }
   | { view: 'comentarios' }
   | { view: 'testimonios' }
+  | { view: 'disenadora' }
 
 function routeFromAdminHash(): AdminRoute {
   const hash = window.location.hash
@@ -48,6 +51,7 @@ function routeFromAdminHash(): AdminRoute {
   if (hash.startsWith('#/admin/contacto')) return { view: 'contacto' }
   if (hash.startsWith('#/admin/comentarios')) return { view: 'comentarios' }
   if (hash.startsWith('#/admin/testimonios')) return { view: 'testimonios' }
+  if (hash.startsWith('#/admin/disenadora')) return { view: 'disenadora' }
   return { view: 'dashboard' }
 }
 
@@ -175,6 +179,15 @@ function AdminDashboard({ newReviews }: { newReviews: number }) {
             </p>
           </a>
           <a
+            href="#/admin/disenadora"
+            className="rounded-xl border border-brand-primary/15 bg-white/60 p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-primary/10 motion-reduce:transform-none motion-reduce:transition-none"
+          >
+            <h2 className="font-display text-lg text-brand-deep">Diseñadora</h2>
+            <p className="mt-1 text-sm text-ink/80">
+              Edite el perfil de la diseñadora que se publica en la tienda.
+            </p>
+          </a>
+          <a
             href="#/"
             className="rounded-xl border border-brand-primary/15 bg-white/60 p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-primary/10 motion-reduce:transform-none motion-reduce:transition-none"
           >
@@ -250,6 +263,7 @@ function AdminPanel() {
           {navLink('#/admin/contacto', 'Contacto', route.view === 'contacto')}
           {navLink('#/admin/comentarios', 'Comentarios', route.view === 'comentarios', newReviews)}
           {navLink('#/admin/testimonios', 'Testimonios', route.view === 'testimonios')}
+          {navLink('#/admin/disenadora', 'Diseñadora', route.view === 'disenadora')}
         </nav>
       </header>
       <main className="flex-1">
@@ -267,6 +281,8 @@ function AdminPanel() {
           <ReviewsManager />
         ) : route.view === 'testimonios' ? (
           <TestimonialsManager />
+        ) : route.view === 'disenadora' ? (
+          <DesignerProfileManager />
         ) : (
           <AdminDashboard newReviews={newReviews} />
         )}

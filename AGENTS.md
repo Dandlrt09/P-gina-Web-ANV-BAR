@@ -33,7 +33,7 @@ src/
   admin/        # admin panel: auth context, login/recovery, product CRUD,
                 # spreadsheet import; Supabase client-side admin data access
   shared/       # cross-cutting primitives: Container, Reveal animation, Supabase client
-content/        # build-time content sources (JSON) + seed source for products
+content/        # bundled JSON fallbacks (designer, contact) + build-time categories + seed source for products
 supabase/       # SQL migrations, RLS policies, checks, seed script
 public/imagenes/ # local photos referenced by seed JSONs
 ```
@@ -42,7 +42,8 @@ public/imagenes/ # local photos referenced by seed JSONs
 
 - **Products & categories**: fetched ONCE from Supabase before any route renders (`CatalogProvider` gate in `src/app/App.tsx`); consumers read the module singleton in `src/catalog/catalog.ts`.
 - **Testimonials**: loaded LIVE from Supabase table `testimonials` (RLS public read, admin-write-only) with realtime updates; managed at `#/admin/testimonios`.
-- **Designer profile / contact channels**: loaded at build time from `content/*.json` via `import.meta.glob` with strict runtime validation that throws at startup on malformed data.
+- **Designer profile**: loaded LIVE from Supabase table `designer_profile` (singleton row id=1; RLS public read, admin-update-only) with realtime updates; managed at `#/admin/disenadora`. `content/designer.json` stays bundled as the silent fallback shown until the DB read resolves.
+- **Contact channels**: loaded LIVE from Supabase table `contact_channels` with `content/contact.json` as the bundled fallback.
 - **Categories** are a presentation contract: canonical tuple lives in `src/catalog/catalog.ts`; the seed validates the database against it.
 - **Reviews and likes** persist client-side only (localStorage).
 
