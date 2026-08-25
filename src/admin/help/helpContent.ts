@@ -80,7 +80,7 @@ export const HELP_SECTIONS: HelpSection[] = [
       {
         title: 'Reseñas de productos',
         paragraphs: [
-          'En la ficha de cada producto cualquier visitante puede dejar una reseña: elige de 1 a 5 estrellas, escribe su experiencia (mínimo 10 caracteres) y opcionalmente su nombre o ciudad. Acepta los términos y la review se publica enseguida, sin revisión previa.',
+          'En la ficha de cada producto cualquier visitante puede dejar una reseña: elige de 1 a 5 estrellas, escribe su experiencia (mínimo 10 caracteres) y opcionalmente su nombre o ciudad. La review se publica enseguida, sin revisión previa.',
           'Por eso existe la moderación: desde Comentarios en este panel puede responder en nombre de la marca o eliminar lo que no deba permanecer publicado.',
         ],
       },

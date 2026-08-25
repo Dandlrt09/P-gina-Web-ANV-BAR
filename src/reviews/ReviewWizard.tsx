@@ -1,14 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { REVIEW_BOUNDS, submitReview, type ProductReview } from './productReviews'
 
-/**
- * Links de Términos y Condiciones y Política de Privacidad de las reviews.
- * Apuntan a las páginas públicas de Judge.me (decisión del cliente: reutiliza
- * esas páginas en vez de redactar páginas propias por ahora).
- */
-export const REVIEW_TERMS_URL = 'https://judge.me/terms'
-export const REVIEW_PRIVACY_URL = 'https://judge.me/privacy'
-
 const RATING_PHRASES: Record<number, string> = {
   1: 'No fue para mí',
   2: 'Le falta algo',
@@ -26,7 +18,7 @@ type ReviewWizardProps = {
 /**
  * Wizard de review en dos pasos:
  *  1. Selección de estrellas (1-5) con una frase por nivel.
- *  2. Comentario + nombre/ciudad opcional + Términos y Condiciones + botón
+ *  2. Comentario + nombre/ciudad opcional + aviso de publicación pública + botón
  *     de publicación.
  * Al publicar inserta la review en Supabase vía submitReview: el estado de
  * agradecimiento llega solo cuando la base devuelve la fila insertada. La
@@ -232,26 +224,8 @@ export function ReviewWizard({ productId, onPublished }: ReviewWizardProps) {
                 className="mt-1 size-4 shrink-0 accent-brand-primary"
               />
               <span>
-                Solo te contactaremos sobre tu review si es necesario. Al enviar tu review, aceptas
-                nuestros{' '}
-                <a
-                  href={REVIEW_TERMS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline decoration-brand-primary/40 underline-offset-2 transition-colors hover:text-brand-primary"
-                >
-                  términos y condiciones
-                </a>{' '}
-                y la{' '}
-                <a
-                  href={REVIEW_PRIVACY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline decoration-brand-primary/40 underline-offset-2 transition-colors hover:text-brand-primary"
-                >
-                  política de privacidad
-                </a>
-                .
+                Solo te contactaremos sobre tu review si es necesario. Al enviarla, tu comentario
+                se publica de forma pública junto con el nombre o ciudad que indiques (opcional).
               </span>
             </label>
           </div>
