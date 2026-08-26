@@ -84,7 +84,7 @@ export function ProductDetail({ product, onBackToCatalog }: ProductDetailProps) 
             <h1 className="mt-2 font-display text-4xl font-medium leading-[1.1] text-brand-deep sm:text-5xl">
               {product.name}
             </h1>
-            <p className="mt-3 font-display text-2xl font-medium text-brand-primary sm:text-3xl">
+            <p className="mt-3 text-lg font-medium text-brand-primary sm:text-xl">
               {formatCOP(product.priceCOP)}
             </p>
             {likeCount > 0 && (

@@ -71,7 +71,7 @@ export function ProductCard({ product, onQuickView, onOpenDetail }: ProductCardP
       <div className="flex flex-1 flex-col gap-1.5 p-4">
         <p className="text-xs uppercase tracking-[0.2em] text-accent">{product.category}</p>
         <h3 className="font-display text-lg leading-snug text-brand-deep">{product.name}</h3>
-        <p className="mt-auto pt-1 text-base font-semibold text-brand-primary">
+        <p className="mt-auto pt-1 text-sm font-medium text-brand-primary">
           {formatCOP(product.priceCOP)}
         </p>
         <button

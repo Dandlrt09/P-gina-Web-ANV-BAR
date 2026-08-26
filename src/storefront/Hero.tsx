@@ -36,19 +36,19 @@ export function Hero() {
       <Container className="relative py-20 sm:py-28 lg:py-32">
         <div className="relative max-w-2xl">
           <p className="animate-rise motion-reduce:animate-none text-xs font-semibold uppercase tracking-[0.3em] text-surface [text-shadow:0_1px_8px_rgba(0,0,0,0.55)]">
-            ✦ Colección RUBRA
+            ✦ Colección
           </p>
           <h1 className="animate-rise motion-reduce:animate-none mt-5 font-display text-5xl font-medium leading-[1.05] text-surface [text-shadow:0_1px_12px_rgba(0,0,0,0.25)] sm:text-6xl lg:text-7xl">
             Donde la ligereza
             <br />
             se convierte en{' '}
-            <em className="bg-gradient-to-r from-[#e3b37e] via-[#f2d9a8] to-[#c9904f] bg-clip-text font-semibold italic text-transparent [filter:drop-shadow(0_2px_8px_rgba(0,0,0,0.45))]">
+            <em className="bg-[linear-gradient(to_right,#6b1d2a,#9e2e48,#e8829a,#9e2e48,#6b1d2a)] bg-clip-text font-medium italic text-transparent [filter:drop-shadow(0_2px_8px_rgba(0,0,0,0.45))]">
               elegancia
             </em>
           </h1>
-          <p className="animate-rise motion-reduce:animate-none mt-6 max-w-xl text-surface [animation-delay:120ms] [text-shadow:0_2px_12px_rgba(0,0,0,0.6)]">
+          <p className="animate-rise motion-reduce:animate-none mt-6 max-w-xl text-xs font-semibold uppercase tracking-[0.3em] text-surface [animation-delay:120ms] [text-shadow:0_2px_12px_rgba(0,0,0,0.6)]">
             Prendas femeninas hechas a mano bajo pedido, inspiradas en la
-            trinitaria que florece en los jardines del Caribe.
+            bugambilla que florece en los jardines del Caribe.
           </p>
           <div className="animate-rise motion-reduce:animate-none mt-8 flex flex-wrap items-center gap-3 [animation-delay:240ms]">
             <a
