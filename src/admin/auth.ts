@@ -5,7 +5,7 @@ import { createContext, useContext } from 'react'
  * `as const`: el contrato vive aquí y la copia server-side es
  * `public.is_admin()` en la migración admin (deben mantenerse en sync).
  */
-export const ADMIN_EMAILS = ['danieldelosriost@gmail.com'] as const
+export const ADMIN_EMAILS = ['danieldelosriost@gmail.com', 'anaysvalentinav@gmail.com'] as const
 
 export type AuthStatus = 'loading' | 'signedOut' | 'ok' | 'denied'
 
